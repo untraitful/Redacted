@@ -51,6 +51,12 @@ in AI chat inputs before the text reaches the site. It is a seatbelt for acciden
 - Bundling uses esbuild. Content scripts are IIFE bundles (classic scripts, no ESM). One manifest source,
   with per-browser tweaks applied at build time. The manifest includes both `background.service_worker` and
   `background.scripts`, plus `browser_specific_settings.gecko`.
+- Listeners are registered in the capture phase on `window` (not `document`) at `document_start`, so they run
+  before any page listener, including the page's own window-capture ones.
+- "Always allow" stores `sha256:<hex>` in the allowlist, never the value. The engine has a sync SHA-256
+  because handlers can't await.
+- Editor writes are verified by reading back; tests drive the controller with fake editors in happy-dom
+  (`test/content/`), and real editors are covered by Playwright in Phase 5.
 - Write strategies: for textarea/input, use the native prototype `value` setter or `setRangeText`, then
   dispatch a bubbling `input` event. For contenteditable, select all and dispatch a synthetic `paste` with
   a `DataTransfer`, falling back to `execCommand('insertText')`. Our own synthetic events are marked so we
