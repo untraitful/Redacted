@@ -14,10 +14,16 @@ in AI chat inputs before the text reaches the site. It is a seatbelt for acciden
 ## Commands (pnpm; npm is not installed)
 - `pnpm install`
 - `pnpm test` runs the Vitest unit tests (engine and anything DOM-free; DOM pieces use happy-dom/jsdom)
-- `pnpm e2e` runs Playwright on **Chromium only** against the local fixture pages in `e2e/fixtures/`
+- `pnpm e2e` builds, then runs Playwright on **Chromium only** with the real `dist/chrome`. Fixture pages in `e2e/fixtures/`
+  are served via `context.route` under `https://poe.com/` (a production-manifest host), and any other request fails the test.
+  One-time setup: `pnpm exec playwright install chromium`.
+- `pnpm lint:firefox` runs `web-ext lint` on `dist/firefox` (3 expected warnings: service_worker ignored, data_collection_permissions vs min 128)
 - `pnpm build` produces `dist/chrome/`, `dist/firefox/`, `dist/redactor-chrome.zip` and `dist/redactor-firefox.zip`
 - `pnpm typecheck` runs `tsc --noEmit` (strict)
-- Firefox is verified with `web-ext lint` on the Firefox build plus the manual QA checklist. It has no automated e2e.
+- Firefox is verified with `web-ext lint` plus the manual checklist in `docs/QA.md`. It has no automated e2e.
+- e2e can't reach into our closed shadow roots: drive the UI by keyboard (Tab/Enter/Esc), detect focus via
+  `document.activeElement.tagName === 'REDACTOR-UI'`, and read rendered text from the CDP accessibility tree (`axText`).
+- Chrome's `execCommand('insertText')` does NOT fire `beforeinput`; a "rejecting editor" must revert on `input`.
 
 ## Hard rules
 - 100% local: no network requests, telemetry or remote code. **Zero runtime dependencies.** Dev deps are fine.
