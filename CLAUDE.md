@@ -62,6 +62,10 @@ in AI chat inputs before the text reaches the site. It is a seatbelt for acciden
   redacted copies; if the engine can't carry a constructed DataTransfer, it fails closed.
 - Restore mode (experimental, off): `<redactor-restore>` keeps the placeholder in light DOM and renders the
   original in a closed shadow root, only after a message is quiet for 800 ms.
+- Settings from storage or import pass through `sanitizeSettings` (trust boundary). Custom and optional
+  sites (x.com, github.com) get a runtime permission plus `scripting.registerContentScripts`, re-synced by
+  the background at startup. `permissions.request` must be the first await in the click handler.
+- Popup and options are plain DOM (no framework). Their tests use a fake `chrome` (`test/pages/fake-chrome.ts`).
 - Write strategies: for textarea/input, use the native prototype `value` setter or `setRangeText`, then
   dispatch a bubbling `input` event. For contenteditable, select all and dispatch a synthetic `paste` with
   a `DataTransfer`, falling back to `execCommand('insertText')`. Our own synthetic events are marked so we

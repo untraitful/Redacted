@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "description": "Replaces secrets and personal data with placeholders before they reach AI chat sites. 100% local.",
   "minimum_chrome_version": "121",
-  "permissions": ["storage", "scripting"],
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
@@ -18,23 +21,53 @@
     "https://grok.com/*",
     "https://poe.com/*"
   ],
-  "optional_host_permissions": ["https://x.com/*", "https://github.com/*", "https://*/*"],
+  "optional_host_permissions": [
+    "https://x.com/*",
+    "https://github.com/*",
+    "https://*/*"
+  ],
   "background": {
     "service_worker": "background.js",
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
-      "matches": ["__HOSTS__"],
-      "js": ["content.js"],
+      "matches": [
+        "__HOSTS__"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start"
     }
   ],
+  "action": {
+    "default_title": "Redactor",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "redact-input": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "Redact the current input"
+    }
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "redactor@local",
       "strict_min_version": "128.0",
-      "data_collection_permissions": { "required": ["none"] }
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }

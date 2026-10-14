@@ -12,7 +12,12 @@ manifest.content_scripts[0].matches = manifest.host_permissions;
 rmSync('dist', { recursive: true, force: true });
 const out = 'dist/chrome';
 await build({
-  entryPoints: { content: 'src/content/index.ts', background: 'src/background/index.ts' },
+  entryPoints: {
+    content: 'src/content/index.ts',
+    background: 'src/background/index.ts',
+    options: 'src/options/main.ts',
+    popup: 'src/popup/main.ts',
+  },
   outdir: out,
   bundle: true,
   format: 'iife',
@@ -23,6 +28,7 @@ await build({
   logLevel: 'warning',
 });
 writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, 2));
+for (const f of ['src/options/options.html', 'src/options/page.css', 'src/popup/popup.html']) cpSync(f, join(out, f.split('/').pop()));
 cpSync(out, 'dist/firefox', { recursive: true });
 
 const files = (dir) => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? files(join(dir, f)) : [join(dir, f)]));

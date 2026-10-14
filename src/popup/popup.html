@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redactor</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body class="popup">
+<main>
+  <div class="row" style="justify-content:space-between">
+    <h1>Redactor</h1>
+    <label class="check"><input type="checkbox" id="enabled"> On</label>
+  </div>
+  <section id="site"></section>
+  <section>
+    <div class="stats">
+      <div><b id="count">0</b><small>redactions in this tab</small></div>
+      <div><b id="vault-size">0</b><small>values in the vault</small></div>
+    </div>
+  </section>
+  <section>
+    <h2>This tab's vault</h2>
+    <p class="muted" id="vault-empty">Nothing redacted yet.</p>
+    <ul class="list" id="vault"></ul>
+    <div class="row" style="margin-top:8px"><button id="clear">Clear vault</button></div>
+  </section>
+  <div class="row"><button id="options">Settings</button></div>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>

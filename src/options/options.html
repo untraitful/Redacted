@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redactor settings</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+<main>
+  <h1>Redactor</h1>
+  <p class="muted">Everything runs locally. Settings are stored in this browser only; redacted values never are.</p>
+
+  <section aria-labelledby="h-general">
+    <h2 id="h-general">Behavior</h2>
+    <div class="grid">
+      <label class="check"><input type="checkbox" data-setting="enabled"> Redactor is on</label>
+      <label class="field">On paste
+        <select data-setting="pasteMode">
+          <option value="auto">Redact automatically (with Undo)</option>
+          <option value="review">Ask me first</option>
+          <option value="off">Do nothing</option>
+        </select>
+      </label>
+      <label class="field">On send
+        <select data-setting="sendMode">
+          <option value="review">Review before sending</option>
+          <option value="auto">Redact automatically</option>
+          <option value="block">Block, with explicit override</option>
+          <option value="off">Do nothing</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" data-setting="autoResend"> Send right after an automatic redaction</label>
+      <label class="check"><input type="checkbox" data-setting="livePill"> Show “secrets detected” while typing</label>
+      <label class="field">Placeholder style
+        <select data-setting="placeholderStyle">
+          <option value="bracket">[API_KEY_1]</option>
+          <option value="mustache">{{API_KEY_1}}</option>
+          <option value="angle">&lt;API_KEY_1&gt;</option>
+        </select>
+      </label>
+      <label class="field">Minimum confidence
+        <select data-setting="minConfidence">
+          <option value="low">Low (catch more)</option>
+          <option value="medium">Medium</option>
+          <option value="high">High (fewer false positives)</option>
+        </select>
+      </label>
+      <label class="field">File uploads
+        <select data-setting="fileMode">
+          <option value="warn">Warn before sending</option>
+          <option value="redact">Upload a redacted copy (experimental)</option>
+          <option value="off">Ignore</option>
+        </select>
+      </label>
+    </div>
+    <label class="check" style="margin-top:12px"><input type="checkbox" data-setting="restoreMode"> Restore mode (experimental): show originals in the chat transcript</label>
+    <p class="warn">Restore mode puts your original values back into the page's DOM tree, inside closed shadow roots. Page
+      scripts reading text see only the placeholder, but the originals are now part of the page. Leave it off unless you need it.</p>
+  </section>
+
+  <section aria-labelledby="h-test">
+    <h2 id="h-test">Test the detector</h2>
+    <label class="field">Paste text to see what would be redacted (nothing leaves this page)
+      <textarea id="test-input" spellcheck="false"></textarea>
+    </label>
+    <pre id="test-output" aria-live="polite"></pre>
+    <ul class="list" id="test-findings"></ul>
+  </section>
+
+  <section aria-labelledby="h-detectors">
+    <h2 id="h-detectors">Detectors</h2>
+    <div id="detectors"></div>
+  </section>
+
+  <section aria-labelledby="h-allow">
+    <h2 id="h-allow">Allowlist</h2>
+    <label class="field">One per line: an exact value, or <code>/regex/flags</code>. “Always allow” adds <code>sha256:…</code> hashes, never the value.
+      <textarea id="allowlist" spellcheck="false"></textarea>
+    </label>
+    <p id="allowlist-errors" class="error" role="alert"></p>
+  </section>
+
+  <section aria-labelledby="h-custom">
+    <h2 id="h-custom">Custom patterns</h2>
+    <ul class="list" id="patterns"></ul>
+    <h3>Add a pattern</h3>
+    <div class="grid">
+      <label class="field">Name <input type="text" id="p-name" placeholder="Employee ID"></label>
+      <label class="field">Placeholder label <input type="text" id="p-label" placeholder="EMPLOYEE_ID"></label>
+      <label class="field">Regex <input type="text" id="p-pattern" placeholder="EMP-(\d{6})" spellcheck="false"></label>
+      <label class="field">Flags <input type="text" id="p-flags" placeholder="i" maxlength="4"></label>
+    </div>
+    <p class="muted">With a capture group, only group 1 is redacted.</p>
+    <label class="field">Live test <textarea id="p-test" spellcheck="false" placeholder="Sample text"></textarea></label>
+    <pre id="p-result" aria-live="polite"></pre>
+    <div class="row"><button class="primary" id="p-add">Add pattern</button></div>
+  </section>
+
+  <section aria-labelledby="h-sites">
+    <h2 id="h-sites">Sites</h2>
+    <h3>Built in</h3>
+    <ul class="list" id="sites-builtin"></ul>
+    <h3>Optional</h3>
+    <ul class="list" id="sites-optional"></ul>
+    <h3>Custom sites</h3>
+    <ul class="list" id="sites-custom"></ul>
+    <div class="grid" style="margin-top:8px">
+      <label class="field">Host <input type="text" id="s-host" placeholder="chat.example.com" spellcheck="false"></label>
+      <label class="field">Input selector (optional) <input type="text" id="s-input" placeholder="textarea#prompt" spellcheck="false"></label>
+      <label class="field">Send button selector (optional) <input type="text" id="s-send" placeholder="button[type=submit]" spellcheck="false"></label>
+    </div>
+    <p id="s-error" class="error" role="alert"></p>
+    <div class="row"><button class="primary" id="s-add">Add site</button></div>
+    <p class="muted">Adding a site asks the browser for access to that site only.</p>
+  </section>
+
+  <section aria-labelledby="h-io">
+    <h2 id="h-io">Import / export</h2>
+    <p class="muted">Exports settings only. Redacted values are never exported.</p>
+    <div class="row">
+      <button id="export">Export settings</button>
+      <label class="row"><span>Import</span> <input type="file" id="import" accept="application/json,.json"></label>
+    </div>
+    <p id="io-status" role="status"></p>
+  </section>
+</main>
+<div id="status" role="status" aria-live="polite"></div>
+<script src="options.js"></script>
+</body>
+</html>
