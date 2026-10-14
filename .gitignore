@@ -3,3 +3,8 @@ dist/
 test-results/
 playwright-report/
 e2e/.served/
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/live/
+.impeccable/hook.cache.json

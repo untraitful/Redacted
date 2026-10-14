@@ -1,0 +1,466 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "title": "Design System: Redactor",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(96.7% 0.008 100)",
+        "tonalRamp": [
+          "oklch(15% 0.008 100)",
+          "oklch(25% 0.008 100)",
+          "oklch(35% 0.008 100)",
+          "oklch(45% 0.008 100)",
+          "oklch(55% 0.008 100)",
+          "oklch(65% 0.008 100)",
+          "oklch(80% 0.008 100)",
+          "oklch(95% 0.008 100)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Paper Two",
+        "canonical": "oklch(93.7% 0.009 100)",
+        "tonalRamp": [
+          "oklch(15% 0.009 100)",
+          "oklch(25% 0.009 100)",
+          "oklch(35% 0.009 100)",
+          "oklch(45% 0.009 100)",
+          "oklch(55% 0.009 100)",
+          "oklch(65% 0.009 100)",
+          "oklch(80% 0.009 100)",
+          "oklch(95% 0.009 100)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(20.5% 0.006 285)",
+        "tonalRamp": [
+          "oklch(15% 0.006 285)",
+          "oklch(25% 0.006 285)",
+          "oklch(35% 0.006 285)",
+          "oklch(45% 0.006 285)",
+          "oklch(55% 0.006 285)",
+          "oklch(65% 0.006 285)",
+          "oklch(80% 0.006 285)",
+          "oklch(95% 0.006 285)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Two",
+        "canonical": "oklch(39.5% 0.012 285)",
+        "tonalRamp": [
+          "oklch(15% 0.012 285)",
+          "oklch(25% 0.012 285)",
+          "oklch(35% 0.012 285)",
+          "oklch(45% 0.012 285)",
+          "oklch(55% 0.012 285)",
+          "oklch(65% 0.012 285)",
+          "oklch(80% 0.012 285)",
+          "oklch(95% 0.012 285)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "oklch(51% 0.009 285)",
+        "tonalRamp": [
+          "oklch(15% 0.009 285)",
+          "oklch(25% 0.009 285)",
+          "oklch(35% 0.009 285)",
+          "oklch(45% 0.009 285)",
+          "oklch(55% 0.009 285)",
+          "oklch(65% 0.009 285)",
+          "oklch(80% 0.009 285)",
+          "oklch(95% 0.009 285)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(83% 0.013 95)",
+        "tonalRamp": [
+          "oklch(15% 0.013 95)",
+          "oklch(25% 0.013 95)",
+          "oklch(35% 0.013 95)",
+          "oklch(45% 0.013 95)",
+          "oklch(55% 0.013 95)",
+          "oklch(65% 0.013 95)",
+          "oklch(80% 0.013 95)",
+          "oklch(95% 0.013 95)"
+        ]
+      },
+      "cite": {
+        "role": "primary",
+        "displayName": "Citation Blue",
+        "canonical": "oklch(46% 0.17 263)",
+        "tonalRamp": [
+          "oklch(15% 0.17 263)",
+          "oklch(25% 0.17 263)",
+          "oklch(35% 0.17 263)",
+          "oklch(45% 0.17 263)",
+          "oklch(55% 0.17 263)",
+          "oklch(65% 0.17 263)",
+          "oklch(80% 0.17 263)",
+          "oklch(95% 0.17 263)"
+        ]
+      },
+      "rubric": {
+        "role": "secondary",
+        "displayName": "Rubric Red",
+        "canonical": "oklch(50% 0.18 28)",
+        "tonalRamp": [
+          "oklch(15% 0.18 28)",
+          "oklch(25% 0.18 28)",
+          "oklch(35% 0.18 28)",
+          "oklch(45% 0.18 28)",
+          "oklch(55% 0.18 28)",
+          "oklch(65% 0.18 28)",
+          "oklch(80% 0.18 28)",
+          "oklch(95% 0.18 28)"
+        ]
+      },
+      "paper-dark": {
+        "role": "neutral",
+        "displayName": "Paper (dark)",
+        "canonical": "oklch(20.5% 0.008 285)",
+        "tonalRamp": [
+          "oklch(15% 0.008 285)",
+          "oklch(25% 0.008 285)",
+          "oklch(35% 0.008 285)",
+          "oklch(45% 0.008 285)",
+          "oklch(55% 0.008 285)",
+          "oklch(65% 0.008 285)",
+          "oklch(80% 0.008 285)",
+          "oklch(95% 0.008 285)"
+        ]
+      },
+      "paper-2-dark": {
+        "role": "neutral",
+        "displayName": "Paper Two (dark)",
+        "canonical": "oklch(24.5% 0.01 285)",
+        "tonalRamp": [
+          "oklch(15% 0.01 285)",
+          "oklch(25% 0.01 285)",
+          "oklch(35% 0.01 285)",
+          "oklch(45% 0.01 285)",
+          "oklch(55% 0.01 285)",
+          "oklch(65% 0.01 285)",
+          "oklch(80% 0.01 285)",
+          "oklch(95% 0.01 285)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Ink (dark)",
+        "canonical": "oklch(93.7% 0.008 100)",
+        "tonalRamp": [
+          "oklch(15% 0.008 100)",
+          "oklch(25% 0.008 100)",
+          "oklch(35% 0.008 100)",
+          "oklch(45% 0.008 100)",
+          "oklch(55% 0.008 100)",
+          "oklch(65% 0.008 100)",
+          "oklch(80% 0.008 100)",
+          "oklch(95% 0.008 100)"
+        ]
+      },
+      "ink-2-dark": {
+        "role": "neutral",
+        "displayName": "Ink Two (dark)",
+        "canonical": "oklch(82% 0.012 100)",
+        "tonalRamp": [
+          "oklch(15% 0.012 100)",
+          "oklch(25% 0.012 100)",
+          "oklch(35% 0.012 100)",
+          "oklch(45% 0.012 100)",
+          "oklch(55% 0.012 100)",
+          "oklch(65% 0.012 100)",
+          "oklch(80% 0.012 100)",
+          "oklch(95% 0.012 100)"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Muted (dark)",
+        "canonical": "oklch(71% 0.01 285)",
+        "tonalRamp": [
+          "oklch(15% 0.01 285)",
+          "oklch(25% 0.01 285)",
+          "oklch(35% 0.01 285)",
+          "oklch(45% 0.01 285)",
+          "oklch(55% 0.01 285)",
+          "oklch(65% 0.01 285)",
+          "oklch(80% 0.01 285)",
+          "oklch(95% 0.01 285)"
+        ]
+      },
+      "rule-dark": {
+        "role": "neutral",
+        "displayName": "Rule (dark)",
+        "canonical": "oklch(34% 0.014 285)",
+        "tonalRamp": [
+          "oklch(15% 0.014 285)",
+          "oklch(25% 0.014 285)",
+          "oklch(35% 0.014 285)",
+          "oklch(45% 0.014 285)",
+          "oklch(55% 0.014 285)",
+          "oklch(65% 0.014 285)",
+          "oklch(80% 0.014 285)",
+          "oklch(95% 0.014 285)"
+        ]
+      },
+      "cite-dark": {
+        "role": "primary",
+        "displayName": "Citation Blue (dark)",
+        "canonical": "oklch(77% 0.12 265)",
+        "tonalRamp": [
+          "oklch(15% 0.12 265)",
+          "oklch(25% 0.12 265)",
+          "oklch(35% 0.12 265)",
+          "oklch(45% 0.12 265)",
+          "oklch(55% 0.12 265)",
+          "oklch(65% 0.12 265)",
+          "oklch(80% 0.12 265)",
+          "oklch(95% 0.12 265)"
+        ]
+      },
+      "rubric-dark": {
+        "role": "secondary",
+        "displayName": "Rubric Red (dark)",
+        "canonical": "oklch(76% 0.14 30)",
+        "tonalRamp": [
+          "oklch(15% 0.14 30)",
+          "oklch(25% 0.14 30)",
+          "oklch(35% 0.14 30)",
+          "oklch(45% 0.14 30)",
+          "oklch(55% 0.14 30)",
+          "oklch(65% 0.14 30)",
+          "oklch(80% 0.14 30)",
+          "oklch(95% 0.14 30)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Dialog titles, page title, section headings."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Sub-headings, spec terms, finding names, primary button label."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All prose and controls; 1.55 line height on pages."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Keys (600), masked values, header blocks, positions, leader values, textareas."
+      },
+      "mono-small": {
+        "displayName": "Mono small",
+        "purpose": "Popup and narrow header blocks, key hints, checkbox sub-notes."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog-lift",
+        "value": "0 18px 50px rgb(0 0 0 / .35), 0 2px 6px rgb(0 0 0 / .12)",
+        "purpose": "In-chat review and failure dialogs over a third-party page."
+      },
+      {
+        "name": "toast-lift",
+        "value": "0 10px 30px rgb(0 0 0 / .3)",
+        "purpose": "In-chat toast."
+      },
+      {
+        "name": "pill-lift",
+        "value": "0 4px 14px rgb(0 0 0 / .25)",
+        "purpose": "In-chat detection pill."
+      },
+      {
+        "name": "scrim",
+        "value": "rgb(10 10 12 / .55); dark rgb(0 0 0 / .62)",
+        "purpose": "Backdrop behind in-chat dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rise",
+        "value": "200ms cubic-bezier(.16, 1, .3, 1), from opacity .5 translateY(6px)",
+        "purpose": "Dialog entry (180ms for the toast)."
+      },
+      {
+        "name": "fade",
+        "value": "140ms ease-out, from opacity .4",
+        "purpose": "Scrim entry."
+      },
+      {
+        "name": "status",
+        "value": "opacity and translateY(4px), .18s ease-out",
+        "purpose": "Settings save-status chip."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "All animation off under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "dialog-compact",
+        "value": "460px (container)"
+      },
+      {
+        "name": "page-narrow",
+        "value": "520px"
+      },
+      {
+        "name": "dialog-max",
+        "value": "640px"
+      },
+      {
+        "name": "page-max",
+        "value": "760px"
+      },
+      {
+        "name": "popup",
+        "value": "340px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-filled safe default (Redact selected, Save).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Redact selected</button>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-btn{font:14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 16px;border:1px solid var(--ink,#17171b);border-radius:3px;background:transparent;color:var(--ink,#17171b);cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-btn-primary{background:var(--ink,#17171b);color:var(--paper,#f6f5ef);font-weight:600}.ds-btn-primary:hover{background:var(--ink-2,#45454d);border-color:var(--ink-2,#45454d)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bordered transparent button (Cancel, Settings, Clear vault).",
+      "html": "<button class=\"ds-btn\">Cancel</button>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-btn{font:14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 16px;border:1px solid var(--ink,#17171b);border-radius:3px;background:transparent;color:var(--ink,#17171b);cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-btn:hover{background:var(--paper-2,#ecebe3)}"
+    },
+    {
+      "name": "Risk Action",
+      "kind": "button",
+      "refersTo": "button-risk",
+      "description": "The only red element: underlined text action for sending unredacted.",
+      "html": "<button class=\"ds-btn ds-btn-risk\">Send as-is</button>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-btn{font:14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 16px;border:1px solid var(--ink,#17171b);border-radius:3px;background:transparent;color:var(--ink,#17171b);cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-btn-risk{border-color:transparent;color:var(--rubric,#b3261e);padding-inline:2px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}.ds-btn-risk:hover{text-decoration-thickness:2px}"
+    },
+    {
+      "name": "Always Allow Toggle",
+      "kind": "button",
+      "refersTo": "button-small",
+      "description": "Small quiet toggle in a References row; pressed state takes an ink border.",
+      "html": "<button class=\"ds-btn ds-btn-allow\" aria-pressed=\"false\">Always allow</button>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-btn{font:14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 16px;border:1px solid var(--ink,#17171b);border-radius:3px;background:transparent;color:var(--ink,#17171b);cursor:pointer}.ds-btn:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-btn-allow{min-height:26px;padding:2px 10px;font-size:13px;border-color:var(--rule,#cbc9bf);color:var(--ink-2,#45454d)}.ds-btn-allow:hover{background:var(--paper-2,#ecebe3)}.ds-btn-allow[aria-pressed=true]{border-color:var(--ink,#17171b);background:var(--paper-2,#ecebe3);color:var(--ink,#17171b);font-weight:600}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Paper-2 field with hairline border.",
+      "html": "<input class=\"ds-input\" type=\"text\" value=\"example.com\">",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-input{font:400 14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink,#17171b);background:var(--paper-2,#ecebe3);border:1px solid var(--rule,#cbc9bf);border-radius:3px;padding:7px 9px;min-height:36px}.ds-input:hover{border-color:var(--muted,#66666d)}.ds-input:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}"
+    },
+    {
+      "name": "RFC Header Block",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Two mono columns over an ink rule: who and what left, where and when right.",
+      "html": "<div class=\"ds-hdr\"><div>Redactor<br><span class=\"ds-k\">References: 3</span></div><div class=\"ds-r\">this page<br><span class=\"ds-k\">October 13, 2026</span></div></div>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-hdr{display:grid;grid-template-columns:1fr auto;gap:0 24px;font:13px/1.55 ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;color:var(--ink,#17171b);padding-bottom:12px;border-bottom:1px solid var(--ink,#17171b)}.ds-r{text-align:right}.ds-k{color:var(--muted,#66666d)}"
+    },
+    {
+      "name": "Reference Row",
+      "kind": "custom",
+      "refersTo": "citation-key",
+      "description": "A finding as a citation: key, source with masked value, line position.",
+      "html": "<div class=\"ds-ref\"><input type=\"checkbox\" checked><span class=\"ds-key\">[OPENAI_API_KEY_1]</span><span><b>OpenAI API key</b><span class=\"ds-meta\">, 2&times;</span><br><code class=\"ds-val\">sk-p…3Q2a (164)</code></span><span class=\"ds-pos\">line 1</span></div>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-ref{display:grid;grid-template-columns:18px minmax(0,220px) minmax(0,1fr) auto;gap:2px 14px;align-items:start;padding:11px 0;border-top:1px solid var(--rule,#cbc9bf);border-bottom:1px solid var(--rule,#cbc9bf);font:14px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink,#17171b)}.ds-ref input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--cite,#1f4fb8)}.ds-key{font:600 13px ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;color:var(--cite,#1f4fb8)}.ds-ref b{font-weight:600}.ds-meta{color:var(--muted,#66666d)}.ds-val{font:13px ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;color:var(--ink-2,#45454d)}.ds-pos{font:13px ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;color:var(--muted,#66666d);white-space:nowrap}"
+    },
+    {
+      "name": "Contents with Dot Leaders",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "Table of contents whose right column states each section's current setting.",
+      "html": "<ol class=\"ds-toc\"><li><a href=\"#\">Behavior</a><span class=\"ds-dots\"></span><span class=\"ds-v\">paste: auto · send: review</span></li><li><a href=\"#\">Detectors</a><span class=\"ds-dots\"></span><span class=\"ds-v\">69 of 72 on</span></li></ol>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-toc{list-style:none;margin:0;padding:0;font:14px/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}.ds-toc li{display:flex;align-items:baseline;gap:8px;padding:3px 0}.ds-toc a{flex:none;color:var(--ink,#17171b);text-decoration:none}.ds-toc a:hover{color:var(--cite,#1f4fb8);text-decoration:underline}.ds-toc a:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-dots{flex:1;min-width:24px;border-bottom:1px dotted var(--muted,#66666d);transform:translateY(-4px)}.ds-v{flex:none;font:13px ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;color:var(--ink-2,#45454d);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Detection Pill",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "Fixed mono chip near the chat input with the count in citation blue.",
+      "html": "<button class=\"ds-pill\"><span class=\"ds-n\">3</span> secrets detected</button>",
+      "css": ":host{--paper:#f6f5ef;--paper-2:#ecebe3;--ink:#17171b;--ink-2:#45454d;--muted:#66666d;--rule:#cbc9bf;--cite:#1f4fb8;--rubric:#b3261e}.ds-pill{display:inline-flex;align-items:center;gap:8px;min-height:28px;padding:3px 12px;border:1px solid var(--ink,#17171b);border-radius:3px;background:var(--paper,#f6f5ef);color:var(--ink,#17171b);font:13px/1.4 ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;box-shadow:0 4px 14px rgb(0 0 0 / .25);cursor:pointer}.ds-pill:hover{background:var(--paper-2,#ecebe3)}.ds-pill:focus-visible{outline:2px solid var(--cite,#1f4fb8);outline-offset:2px}.ds-n{color:var(--cite,#1f4fb8);font-weight:700}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Request for Comments",
+    "overview": "Every Redactor surface is set as a standards document. Redactor's placeholders already are citation keys, so the in-chat review is a References section, the settings page is a spec with a contents page, and the popup is a short memo with the same header block. Paper and ink, hairline rules, one text size, and a monospace voice reserved for the parts a document would set in mono: keys, masked values, header blocks, positions.\n\nThe layer sits on top of third-party AI chat apps, so it has to be recognisably Redactor while staying calm beside the host. It does that by refusing the rounded-card, blue-filled-button, soft-shadow vocabulary every extension ships, and by ranking text with weight and position instead of size. Density is a document's density: rows on rules, no boxes around groups, aligned columns.\n\nLight mode is paper ground with ink text; dark mode inverts to an ink ground with paper-toned text. Both modes follow `prefers-color-scheme` and carry the same roles.",
+    "keyCharacteristics": [
+      "Paper and ink ground; one accent for keys, one for the risky action, nothing else coloured.",
+      "A single 14px text size; rank comes from weight (700, 600, 400) and position.",
+      "Mono only for keys, masked values, header blocks, positions and leader values.",
+      "Hairline rules separate rows; an ink rule closes the header block and opens the footer.",
+      "Square-ish corners (3px controls, 4px sheets).",
+      "Sized in px throughout (host pages shrink the root font; browser zoom still scales px)."
+    ],
+    "rules": [
+      {
+        "name": "The Keys-Only Rule",
+        "body": "Citation blue marks keys and focus, never decoration and never a filled surface.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rubric Rule",
+        "body": "Red appears only on the risky or blocking path. If an element is red, choosing it sends something unredacted or explains why that was stopped.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Size Rule",
+        "body": "Prose and headings share 14px. Rank by weight and placement; do not add a larger display size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Typewriter Rule",
+        "body": "Mono is reserved for what a standards document sets in mono: keys, masked values, header blocks, positions, numbers in leaders. Never for prose or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Overlay-Only Lift Rule",
+        "body": "Shadows exist only on layers that float above a third-party page. Anything inside a sheet, and anything on Redactor's own pages, is flat.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep every text size at 14px for prose and headings, 13px for mono, 12px only for compact mono.",
+      "Do set placeholder keys in mono 600 `cite`, and show skipped and allowed states with line-through and dashed underline as well as colour.",
+      "Do separate rows with 1px `rule` hairlines and close header blocks with a 1px `ink` rule.",
+      "Do give the risky action `rubric` underlined text, apart from the safe actions.",
+      "Do size in px and keep the 2px `cite` focus outline on every control.",
+      "Do honour `prefers-color-scheme`, `prefers-reduced-motion` and `forced-colors` as the built layers do."
+    ],
+    "donts": [
+      "Don't fill a button with `cite` or use blue for anything but keys, links, selection and focus.",
+      "Don't use `rubric` for emphasis, headings or anything not on the risky or error path.",
+      "Don't box groups in rounded cards; use rules and alignment.",
+      "Don't add display sizes or set prose in mono.",
+      "Don't put shadows on Redactor's own pages or on elements inside a sheet.",
+      "Don't load hosted fonts."
+    ]
+  }
+}

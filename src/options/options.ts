@@ -22,6 +22,7 @@ export async function init(doc: Document): Promise<void> {
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => s.classList.remove('show'), 1200);
     renderTest();
+    renderSummary();
   }
 
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Record<string, unknown> = {}, ...kids: (Node | string)[]) => {
@@ -221,7 +222,25 @@ export async function init(doc: Document): Promise<void> {
     input.value = '';
   });
 
+  /** Contents page: each entry's right column states that section's current setting. */
+  function renderSummary(): void {
+    const set = (id: string, text: string) => {
+      const e = doc.getElementById(id);
+      if (e) e.textContent = text;
+    };
+    const on = DETECTORS.filter((d) => settings.detectors[d.id] ?? d.defaultOn).length;
+    const offSites = BUILTIN_SITES.filter((s) => s.hosts.every((h) => settings.disabledSites.includes(h))).length;
+    set('sum-behavior', settings.enabled ? `paste: ${settings.pasteMode} · send: ${settings.sendMode}` : 'off');
+    set('sum-detectors', `${on} of ${DETECTORS.length} on`);
+    set('sum-allow', `${settings.allowlist.length} ${settings.allowlist.length === 1 ? 'entry' : 'entries'}`);
+    set('sum-patterns', String(settings.customPatterns.length));
+    set('sum-sites', `${BUILTIN_SITES.length - offSites} built in · ${settings.customSites.length} custom`);
+  }
+
   function renderAll(): void {
+    const v = doc.getElementById('version');
+    if (v) v.textContent = chrome.runtime.getManifest?.().version ?? '';
+    renderSummary();
     renderFields();
     allow.value = settings.allowlist.join('\n');
     renderDetectors();

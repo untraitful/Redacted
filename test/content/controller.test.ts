@@ -107,6 +107,15 @@ describe('send', () => {
     expect(t.sent).toEqual(['deploy with [GITHUB_TOKEN_1]']);
   });
 
+  it('review rows carry the placeholder they will become and their line', async () => {
+    const t = use({ editor: 'textarea', review: () => ({ action: 'cancel' }) });
+    t.setText(`first line\nsecond ${KEY}\nthird ${KEY}`);
+    t.enter();
+    await until(() => t.calls.review.length === 1);
+    expect(t.calls.review[0]!.items).toMatchObject([{ placeholder: '[GITHUB_TOKEN_1]', line: 2, count: 2 }]);
+    expect(t.vault.vault.entries()).toEqual([]); // previewing numbers stores nothing
+  });
+
   it('Shift+Enter and IME composition pass through', () => {
     const t = use({ editor: 'textarea' });
     t.setText(KEY);

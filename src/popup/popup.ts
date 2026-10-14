@@ -16,6 +16,8 @@ export async function init(doc: Document): Promise<void> {
   const host = tab?.url && /^https?:/.test(tab.url) ? new URL(tab.url).host : '';
   const key = tab?.id !== undefined && host ? vaultKey(tab.id, host) : '';
 
+  $('host-line').textContent = host || 'this tab';
+  $('version').textContent = chrome.runtime.getManifest?.().version ?? '';
   const enabled = $<HTMLInputElement>('enabled');
   enabled.checked = settings.enabled;
   enabled.addEventListener('change', () => void save({ enabled: enabled.checked }));

@@ -1,6 +1,6 @@
 import { hashedAllowEntry, type Engine } from '../engine/engine';
 import type { Finding } from '../engine/types';
-import { mask } from '../engine/vault';
+import { Vault, mask } from '../engine/vault';
 import type { Settings } from '../shared/settings';
 import { GENERIC, type SiteAdapter } from '../sites';
 import {
@@ -50,12 +50,27 @@ function stop(e: Event): void {
   e.stopImmediatePropagation();
 }
 
-function reviewItems(findings: Finding[]): ReviewItem[] {
+/**
+ * One review row per distinct value, in order of first appearance. With `ctx`, each row also gets the placeholder it
+ * will become (numbered on a scratch copy of the vault, so nothing is stored yet) and its line in the message.
+ */
+function reviewItems(findings: Finding[], ctx?: { text: string; vault: Vault }): ReviewItem[] {
   const byValue = new Map<string, ReviewItem>();
-  for (const f of findings) {
+  // shortcut: numbers assume every earlier same-label item is redacted; unticking one can shift later ones by one.
+  const scratch = ctx && new Vault(ctx.vault.style, ctx.vault.entries());
+  for (const f of [...findings].sort((a, b) => a.start - b.start)) {
     const item = byValue.get(f.value);
-    if (item) item.count++;
-    else byValue.set(f.value, { key: f.value, label: f.label, name: f.name, preview: mask(f.value), count: 1 });
+    if (item) {
+      item.count++;
+      continue;
+    }
+    byValue.set(f.value, {
+      key: f.value, label: f.label, name: f.name, preview: mask(f.value), count: 1,
+      ...(ctx && scratch ? {
+        placeholder: scratch.placeholderFor(f.value, f.label, ctx.text),
+        line: ctx.text.slice(0, f.start).split('\n').length,
+      } : {}),
+    });
   }
   return [...byValue.values()];
 }
@@ -204,11 +219,12 @@ export function createController(deps: ControllerDeps) {
       if (pairs) afterSendRedaction(el, pairs, s);
       return;
     }
-    const items = reviewItems(findings);
+    const items = reviewItems(findings, { text, vault: vault.vault });
     const r = await ui.review({
       title: s.sendMode === 'block' ? 'Send blocked: secrets detected' : 'Review before sending',
       tone: s.sendMode === 'block' ? 'blocked' : 'review',
-      intro: `Found ${plural(items.length, 'item')} that ${agree(items.length, 'look')} like secrets or personal data.`,
+      // The header block already carries the count; the lead states only what was found.
+      intro: `${items.length === 1 ? 'This looks' : 'These look'} like secrets or personal data.`,
       items,
       sendLabel: 'Send as-is',
     });
@@ -289,10 +305,10 @@ export function createController(deps: ControllerDeps) {
     }
     let chosen = findings;
     if (s.pasteMode === 'review') {
-      const items = reviewItems(findings);
+      const items = reviewItems(findings, { text: plain, vault: vault.vault });
       const r = await ui.review({
         title: 'Review paste',
-        intro: `This paste contains ${plural(items.length, 'item')} that ${agree(items.length, 'look')} like secrets or personal data.`,
+        intro: `Part of this paste ${agree(items.length, 'look')} like secrets or personal data.`,
         items,
         sendLabel: 'Paste as-is',
       });

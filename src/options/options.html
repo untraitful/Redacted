@@ -8,58 +8,71 @@
 </head>
 <body>
 <main>
-  <h1>Redactor</h1>
-  <p class="muted">Everything runs locally. Settings are stored in this browser only; redacted values never are.</p>
+  <header class="hdr">
+    <div>Redactor<br><span class="k">Version <span id="version">—</span></span></div>
+    <div class="r">Stored in this browser<br><span class="k">Never synced or exported with values</span></div>
+  </header>
+  <h1>Redactor settings</h1>
+  <p class="abstract">Redactor replaces secrets and personal data with placeholders before they reach an AI chat. Everything runs locally; the originals never leave this browser.</p>
 
-  <section aria-labelledby="h-general">
+  <nav class="toc" aria-labelledby="h-toc">
+    <h2 id="h-toc">Contents</h2>
+    <ol class="leaders">
+      <li><a href="#behavior">Behavior</a><span class="dots" aria-hidden="true"></span><span class="v" id="sum-behavior"></span></li>
+      <li><a href="#test">Test the detector</a><span class="dots" aria-hidden="true"></span><span class="v">local only</span></li>
+      <li><a href="#detectors-sec">Detectors</a><span class="dots" aria-hidden="true"></span><span class="v" id="sum-detectors"></span></li>
+      <li><a href="#allow">Allowlist</a><span class="dots" aria-hidden="true"></span><span class="v" id="sum-allow"></span></li>
+      <li><a href="#custom">Custom patterns</a><span class="dots" aria-hidden="true"></span><span class="v" id="sum-patterns"></span></li>
+      <li><a href="#sites">Sites</a><span class="dots" aria-hidden="true"></span><span class="v" id="sum-sites"></span></li>
+      <li><a href="#io">Import / export</a><span class="dots" aria-hidden="true"></span><span class="v">settings only</span></li>
+    </ol>
+  </nav>
+
+  <section id="behavior" aria-labelledby="h-general">
     <h2 id="h-general">Behavior</h2>
-    <div class="grid">
-      <label class="check"><input type="checkbox" data-setting="enabled"> Redactor is on</label>
-      <label class="field">On paste
-        <select data-setting="pasteMode">
+    <dl class="spec">
+      <div><dt>Status</dt><dd><label class="check"><input type="checkbox" data-setting="enabled"> Redactor is on</label></dd></div>
+      <div><dt><label for="opt-paste">On paste</label></dt><dd>
+        <select id="opt-paste" data-setting="pasteMode">
           <option value="auto">Redact automatically (with Undo)</option>
           <option value="review">Ask me first</option>
           <option value="off">Do nothing</option>
-        </select>
-      </label>
-      <label class="field">On send
-        <select data-setting="sendMode">
+        </select></dd></div>
+      <div><dt><label for="opt-send">On send</label></dt><dd>
+        <select id="opt-send" data-setting="sendMode">
           <option value="review">Review before sending</option>
           <option value="auto">Redact automatically</option>
           <option value="block">Block, with explicit override</option>
           <option value="off">Do nothing</option>
         </select>
-      </label>
-      <label class="check"><input type="checkbox" data-setting="autoResend"> Send right after an automatic redaction</label>
-      <label class="check"><input type="checkbox" data-setting="livePill"> Show “secrets detected” while typing</label>
-      <label class="field">Placeholder style
-        <select data-setting="placeholderStyle">
+        <label class="check"><input type="checkbox" data-setting="autoResend"> Send right after an automatic redaction</label></dd></div>
+      <div><dt>While typing</dt><dd><label class="check"><input type="checkbox" data-setting="livePill"> Show “secrets detected” near the input</label></dd></div>
+      <div><dt><label for="opt-style">Placeholder style</label></dt><dd>
+        <select id="opt-style" data-setting="placeholderStyle">
           <option value="bracket">[API_KEY_1]</option>
           <option value="mustache">{{API_KEY_1}}</option>
           <option value="angle">&lt;API_KEY_1&gt;</option>
-        </select>
-      </label>
-      <label class="field">Minimum confidence
-        <select data-setting="minConfidence">
+        </select></dd></div>
+      <div><dt><label for="opt-conf">Minimum confidence</label></dt><dd>
+        <select id="opt-conf" data-setting="minConfidence">
           <option value="low">Low (catch more)</option>
           <option value="medium">Medium</option>
           <option value="high">High (fewer false positives)</option>
-        </select>
-      </label>
-      <label class="field">File uploads
-        <select data-setting="fileMode">
+        </select></dd></div>
+      <div><dt><label for="opt-files">File uploads</label></dt><dd>
+        <select id="opt-files" data-setting="fileMode">
           <option value="warn">Warn before sending</option>
           <option value="redact">Upload a redacted copy (experimental)</option>
           <option value="off">Ignore</option>
-        </select>
-      </label>
-    </div>
-    <label class="check" style="margin-top:12px"><input type="checkbox" data-setting="restoreMode"> Restore mode (experimental): show originals in the chat transcript</label>
+        </select></dd></div>
+      <div><dt>Restore mode</dt><dd><label class="check"><input type="checkbox" data-setting="restoreMode"> Show originals in the chat transcript (experimental)</label></dd></div>
+    </dl>
+    <h3>Security considerations</h3>
     <p class="warn">Restore mode puts your original values back into the page's DOM tree, inside closed shadow roots. Page
       scripts reading text see only the placeholder, but the originals are now part of the page. Leave it off unless you need it.</p>
   </section>
 
-  <section aria-labelledby="h-test">
+  <section id="test" aria-labelledby="h-test">
     <h2 id="h-test">Test the detector</h2>
     <label class="field">Paste text to see what would be redacted (nothing leaves this page)
       <textarea id="test-input" spellcheck="false"></textarea>
@@ -68,12 +81,12 @@
     <ul class="list" id="test-findings"></ul>
   </section>
 
-  <section aria-labelledby="h-detectors">
+  <section id="detectors-sec" aria-labelledby="h-detectors">
     <h2 id="h-detectors">Detectors</h2>
     <div id="detectors"></div>
   </section>
 
-  <section aria-labelledby="h-allow">
+  <section id="allow" aria-labelledby="h-allow">
     <h2 id="h-allow">Allowlist</h2>
     <label class="field">One per line: an exact value, or <code>/regex/flags</code>. “Always allow” adds <code>sha256:…</code> hashes, never the value.
       <textarea id="allowlist" spellcheck="false"></textarea>
@@ -81,7 +94,7 @@
     <p id="allowlist-errors" class="error" role="alert"></p>
   </section>
 
-  <section aria-labelledby="h-custom">
+  <section id="custom" aria-labelledby="h-custom">
     <h2 id="h-custom">Custom patterns</h2>
     <ul class="list" id="patterns"></ul>
     <h3>Add a pattern</h3>
@@ -97,7 +110,7 @@
     <div class="row"><button class="primary" id="p-add">Add pattern</button></div>
   </section>
 
-  <section aria-labelledby="h-sites">
+  <section id="sites" aria-labelledby="h-sites">
     <h2 id="h-sites">Sites</h2>
     <h3>Built in</h3>
     <ul class="list" id="sites-builtin"></ul>
@@ -115,7 +128,7 @@
     <p class="muted">Adding a site asks the browser for access to that site only.</p>
   </section>
 
-  <section aria-labelledby="h-io">
+  <section id="io" aria-labelledby="h-io">
     <h2 id="h-io">Import / export</h2>
     <p class="muted">Exports settings only. Redacted values are never exported.</p>
     <div class="row">

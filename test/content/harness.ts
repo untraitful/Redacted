@@ -3,7 +3,7 @@ import { afterEach } from 'vitest';
 import { createEngine } from '../../src/engine/engine';
 import { createController } from '../../src/content/controller';
 import { readEditor } from '../../src/content/editor';
-import type { ReviewResult, Ui } from '../../src/content/ui';
+import type { ReviewItem, ReviewResult, Ui } from '../../src/content/ui';
 import { VaultClient } from '../../src/content/vault-client';
 import { DEFAULT_SETTINGS, type Settings } from '../../src/shared/settings';
 import type { SiteAdapter } from '../../src/sites';
@@ -29,7 +29,7 @@ export function setup(opts: { editor: 'textarea' | 'react' | 'prosemirror' | 're
   document.body.innerHTML = '';
   const settings: Settings = { ...DEFAULT_SETTINGS, ...opts.settings };
   const sent: string[] = [];
-  const calls = { review: [] as Array<{ title: string; previews: string[] }>, toasts: [] as Array<{ msg: string; undo?: () => void }>,
+  const calls = { review: [] as Array<{ title: string; previews: string[]; items: ReviewItem[] }>, toasts: [] as Array<{ msg: string; undo?: () => void }>,
     failures: [] as string[], pills: [] as number[], allowlist: [] as string[], warns: [] as string[] };
 
   const form = document.createElement('form');
@@ -90,7 +90,7 @@ export function setup(opts: { editor: 'textarea' | 'react' | 'prosemirror' | 're
 
   const ui: Ui = {
     review: async ({ title, items }) => {
-      calls.review.push({ title, previews: items.map((i) => i.preview) });
+      calls.review.push({ title, previews: items.map((i) => i.preview), items });
       const r = (opts.review ?? (() => ({ action: 'redact' })))(items.map((i) => i.key));
       return { selected: new Set(items.map((i) => i.key)), alwaysAllow: new Set(), ...r };
     },

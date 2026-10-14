@@ -7,24 +7,20 @@
 </head>
 <body class="popup">
 <main>
-  <div class="row" style="justify-content:space-between">
-    <h1>Redactor</h1>
-    <label class="check"><input type="checkbox" id="enabled"> On</label>
-  </div>
-  <section id="site"></section>
-  <section>
-    <div class="stats">
-      <div><b id="count">0</b><small>redactions in this tab</small></div>
-      <div><b id="vault-size">0</b><small>values in the vault</small></div>
-    </div>
-  </section>
-  <section>
-    <h2>This tab's vault</h2>
-    <p class="muted" id="vault-empty">Nothing redacted yet.</p>
-    <ul class="list" id="vault"></ul>
-    <div class="row" style="margin-top:8px"><button id="clear">Clear vault</button></div>
-  </section>
-  <div class="row"><button id="options">Settings</button></div>
+  <header class="hdr">
+    <div>Redactor<br><span class="k">Version <span id="version">—</span></span></div>
+    <div class="r"><span id="host-line">this tab</span><br><span class="k">local only</span></div>
+  </header>
+  <div class="block"><label class="check"><input type="checkbox" id="enabled"> Redactor is on</label></div>
+  <div class="block" id="site"></div>
+  <dl class="leaders block">
+    <div><dt>Redactions in this tab</dt><span class="dots" aria-hidden="true"></span><dd id="count">0</dd></div>
+    <div><dt>Values in the vault</dt><span class="dots" aria-hidden="true"></span><dd id="vault-size">0</dd></div>
+  </dl>
+  <h2>References</h2>
+  <p class="muted" id="vault-empty">Nothing redacted in this tab yet.</p>
+  <ul class="list" id="vault"></ul>
+  <div class="row"><button id="clear">Clear vault</button><button id="options">Settings</button></div>
 </main>
 <script src="popup.js"></script>
 </body>

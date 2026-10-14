@@ -6,6 +6,10 @@ export interface ReviewItem {
   /** Masked preview, e.g. `sk-p…3Q2a (51)`. */
   preview: string;
   count: number;
+  /** The placeholder it will become, e.g. `[OPENAI_API_KEY_1]`. */
+  placeholder?: string;
+  /** 1-based line of the first occurrence in the message. */
+  line?: number;
 }
 
 export interface ReviewResult {
@@ -29,112 +33,124 @@ export interface Ui {
   pill(anchor: HTMLElement | null, count: number, onRedact: () => void): void;
 }
 
-// Sizes stay in px on purpose: host pages often shrink the root font (62.5% tricks), which would shrink rem-based UI.
-// Browser zoom still scales px, which is what WCAG 1.4.4 needs.
+// Request-for-Comments world: paper and ink, hairline rules, one text size ranked by weight, mono only for
+// keys, masked values, header blocks and positions. Citation blue is for keys; rubric red only for the risky action.
+// Sizes stay in px on purpose: host pages often shrink the root font, which would shrink rem-based UI;
+// browser zoom still scales px, which is what WCAG 1.4.4 needs.
 const CSS = `
 :host {
   all: initial;
-  --surface: #fff; --surface-2: #f6f7f9; --line: #dcdfe4; --text: #1a1a1a; --muted: #4b5058;
-  --brand: #1f6feb; --brand-ink: #0b3d91; --brand-tint: #e7f0ff; --danger: #b42318; --danger-fill: #b42318;
-  --scrim: rgb(0 0 0 / .45); --shadow: 0 16px 48px rgb(0 0 0 / .28), 0 2px 6px rgb(0 0 0 / .12);
+  --paper: #f6f5ef; --paper-2: #ecebe3; --ink: #17171b; --ink-2: #45454d; --muted: #66666d; --rule: #cbc9bf;
+  --cite: #1f4fb8; --rubric: #b3261e; --scrim: rgb(10 10 12 / .55);
+  --shadow: 0 18px 50px rgb(0 0 0 / .35), 0 2px 6px rgb(0 0 0 / .12);
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :host {
-    --surface: #1e1e1e; --surface-2: #262626; --line: #3a3a3a; --text: #eee; --muted: #b8bcc4;
-    --brand-ink: #cfe0ff; --brand-tint: #1d3357; --danger: #ff8a80; --scrim: rgb(0 0 0 / .6);
+    --paper: #18181c; --paper-2: #222228; --ink: #ecebe4; --ink-2: #c6c5bd; --muted: #a2a2a9; --rule: #3b3b43;
+    --cite: #94b3ff; --rubric: #ff8f80; --scrim: rgb(0 0 0 / .62);
   }
 }
 * { box-sizing: border-box; margin: 0; }
-.surface, button, input, textarea { font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: normal; text-transform: none; }
-::selection { background: var(--brand); color: #fff; }
+.surface, button, input, textarea { font: 14px/1.5 var(--sans); letter-spacing: normal; text-transform: none; }
+.surface { color: var(--ink); }
+code, .key, .pos, .hdr { font-family: var(--mono); font-size: 13px; }
+::selection { background: var(--cite); color: var(--paper); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* Mark: the toolbar icon's redaction bar. Blue = Redactor reviewing, red = a send is being held back. */
-.mark { flex: none; width: 26px; height: 26px; color: var(--brand); display: block; }
-.mark svg { display: block; width: 100%; height: 100%; }
-.danger .mark { color: var(--danger-fill); }
-
 .backdrop { position: fixed; inset: 0; background: var(--scrim); display: grid; place-items: center; padding: 16px; z-index: 2147483647;
-  animation: fade 160ms ease-out; }
-.panel { container-type: inline-size; width: min(560px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column;
-  background: var(--surface); color: var(--text); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
-  animation: rise 220ms cubic-bezier(.16, 1, .3, 1); }
-.head { display: flex; gap: 12px; align-items: center; padding: 20px 20px 0; }
-h2 { font-size: 17px; line-height: 1.3; font-weight: 650; text-wrap: balance; }
-p { text-wrap: pretty; }
-.intro { color: var(--muted); padding: 8px 20px 0 58px; }
-.scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 16px 20px 4px; scrollbar-color: var(--line) transparent; }
-.assure { color: var(--muted); font-size: 13px; padding: 12px 20px 0; }
-.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 16px 20px 20px; margin-top: 12px; border-top: 1px solid var(--line); }
+  animation: fade 140ms ease-out; }
+.doc { container-type: inline-size; width: min(640px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column;
+  background: var(--paper); border-radius: 4px; box-shadow: var(--shadow); overflow: hidden; animation: rise 200ms cubic-bezier(.16, 1, .3, 1); }
+
+/* RFC header block: who is speaking and about what (left), where and when (right). */
+.hdr { display: grid; grid-template-columns: 1fr auto; gap: 0 24px; padding: 16px 28px 12px; border-bottom: 1px solid var(--ink); line-height: 1.55; }
+.hdr .r { text-align: right; }
+.hdr .k { color: var(--muted); }
+.blocked .hdr { border-bottom-color: var(--rubric); }
+.blocked .hdr .cat { color: var(--rubric); }
+
+h2 { font-size: 14px; font-weight: 700; padding: 18px 28px 0; text-wrap: balance; }
+.lead { color: var(--ink-2); padding: 2px 28px 0; text-wrap: pretty; }
+.body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 16px 28px 0; scrollbar-color: var(--rule) transparent;
+  /* Scroll shadows: paper covers fade in once the list scrolls, so a clipped list signals there is more below. */
+  background: linear-gradient(var(--paper) 30%, transparent) top / 100% 32px no-repeat local,
+    linear-gradient(transparent, var(--paper) 70%) bottom / 100% 32px no-repeat local,
+    linear-gradient(rgb(0 0 0 / .16), transparent) top / 100% 10px no-repeat scroll,
+    linear-gradient(transparent, rgb(0 0 0 / .16)) bottom / 100% 10px no-repeat scroll; }
+.sec { font-weight: 700; padding-bottom: 6px; }
+.note { color: var(--ink-2); padding: 14px 28px 0; text-wrap: pretty; }
+
+/* References: hairline-ruled, keys hang in their own column. */
+.refs { list-style: none; padding: 0; border-top: 1px solid var(--rule); }
+.ref { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px 14px; align-items: start; padding: 11px 0;
+  border-bottom: 1px solid var(--rule); }
+.ref input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--cite); cursor: pointer; }
+.pick { display: contents; cursor: pointer; }
+.cite { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 0 14px; min-width: 0; }
+.key { color: var(--cite); font-weight: 600; overflow-wrap: anywhere; }
+.src { min-width: 0; }
+.src b { font-weight: 600; }
+.src .meta { color: var(--muted); }
+.src code { color: var(--ink-2); overflow-wrap: anywhere; }
+.side { display: grid; justify-items: end; gap: 6px; }
+.pos { color: var(--muted); white-space: nowrap; }
+/* State reads in line form as well as colour: struck when skipped, dashed when allowed. */
+.ref[data-state="skip"] .key { color: var(--muted); text-decoration: line-through; }
+.ref:not([data-state="skip"]) .skipped { display: none; }
+.ref[data-state="allow"] .key { color: var(--muted); text-decoration: underline dashed; text-underline-offset: 4px; }
+.allowed-note { grid-column: 2 / -1; color: var(--ink-2); }
+.ref:not([data-state="allow"]) .allowed-note { display: none; }
+
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 16px 28px 20px; margin-top: 16px; border-top: 1px solid var(--ink); }
 .actions { display: flex; gap: 8px; margin-left: auto; }
-
-ul { list-style: none; padding: 0; display: grid; gap: 8px; }
-.item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; padding: 10px 12px;
-  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; }
-.pick { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; cursor: pointer; min-width: 0; }
-.pick input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--brand); cursor: pointer; }
-.text { display: grid; gap: 2px; min-width: 0; }
-.lbl { font: 600 13px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-wrap: anywhere; }
-.meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-.meta code { font: 13px ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--text); }
-.note { grid-column: 1 / -1; color: var(--brand-ink); font-size: 13px; padding-left: 30px; }
-.item:not([data-allowed]) .note { display: none; }
-.item[data-allowed] .lbl, .item[data-allowed] .meta { opacity: .7; }
-
-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 6px 14px;
-  border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); cursor: pointer; }
-button:hover { border-color: var(--muted); }
-button.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
-button.primary:hover { filter: brightness(1.08); }
-button.allow { min-height: 28px; padding: 3px 10px; font-size: 13px; }
-button.allow[aria-pressed="true"] { background: var(--brand-tint); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
-button.allow svg { width: 14px; height: 14px; }
+button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; padding: 6px 16px;
+  border: 1px solid var(--ink); border-radius: 3px; background: transparent; color: var(--ink); cursor: pointer; }
+button:hover { background: var(--paper-2); }
+button.primary { background: var(--ink); color: var(--paper); font-weight: 600; }
+button.primary:hover { background: var(--ink-2); border-color: var(--ink-2); }
+button.allow { min-height: 26px; padding: 2px 10px; font-size: 13px; border-color: var(--rule); color: var(--ink-2); }
+button.allow[aria-pressed="true"] { border-color: var(--ink); background: var(--paper-2); color: var(--ink); font-weight: 600; }
 /* The risky path: available, explicit, never styled like a safe choice. */
-button.risk { border-color: transparent; background: transparent; color: var(--danger); padding-inline: 4px; text-decoration: underline;
+button.risk { border-color: transparent; color: var(--rubric); padding-inline: 2px; text-decoration: underline;
   text-underline-offset: 3px; text-decoration-thickness: 1px; }
-button.risk:hover { text-decoration-thickness: 2px; }
-button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+button.risk:hover { background: transparent; text-decoration-thickness: 2px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--cite); outline-offset: 2px; }
 
-.status:not(:empty) { margin: 12px 20px 0; padding: 8px 12px; border-radius: 8px; background: var(--brand-tint); color: var(--brand-ink); font-weight: 600; }
-.manual { display: block; width: calc(100% - 40px); margin: 8px 20px 0; min-height: 96px; padding: 8px 10px; resize: vertical;
-  font: 13px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--text); background: var(--surface-2);
-  border: 1px solid var(--line); border-radius: 8px; }
-.message { padding: 8px 20px 0 58px; }
+.message { padding: 14px 28px 0; text-wrap: pretty; }
+.status:not(:empty) { margin: 12px 28px 0; padding: 8px 12px; background: var(--paper-2); border-top: 1px solid var(--ink); font-weight: 600; }
+.manual { display: block; width: calc(100% - 56px); margin: 8px 28px 0; min-height: 96px; padding: 8px 10px; resize: vertical;
+  font: 13px/1.45 var(--mono); color: var(--ink); background: var(--paper-2); border: 1px solid var(--rule); border-radius: 3px; }
 
-@container (max-width: 420px) {
-  .intro, .message { padding-left: 20px; }
-  .item { grid-template-columns: 1fr; }
-  .item button.allow { justify-self: start; margin-left: 30px; }
+@container (max-width: 460px) {
+  .hdr, h2, .lead, .note, .message, .foot, .body { padding-inline: 18px; }
+  .manual { margin-inline: 18px; width: calc(100% - 36px); }
+  .cite { grid-template-columns: 1fr; gap: 2px; }
+  .ref { grid-template-columns: 18px minmax(0, 1fr); }
+  .side { grid-column: 2; justify-items: start; grid-auto-flow: column; align-items: center; gap: 12px; }
   .actions { width: 100%; }
   .actions button { flex: 1; }
 }
 
-.toast { position: fixed; right: 16px; bottom: 16px; z-index: 2147483647; display: flex; gap: 6px 12px; align-items: center; flex-wrap: wrap;
-  max-width: min(440px, calc(100vw - 32px)); padding: 10px 10px 10px 12px; border-radius: 12px; background: #18191b; color: #fff;
-  border: 1px solid rgb(255 255 255 / .16); box-shadow: 0 10px 30px rgb(0 0 0 / .35); animation: rise 200ms cubic-bezier(.16, 1, .3, 1); }
-.toast .mark { width: 20px; height: 20px; }
-.toast .msg { flex: 1 1 180px; }
-.toast button { min-height: 32px; background: transparent; color: #8ab4ff; border-color: rgb(255 255 255 / .24); }
-.toast button:hover { border-color: #8ab4ff; }
-.toast kbd { font: 12px ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #c9d7f2; }
+.toast { position: fixed; right: 16px; bottom: 16px; z-index: 2147483647; display: flex; gap: 6px 14px; align-items: center; flex-wrap: wrap;
+  max-width: min(460px, calc(100vw - 32px)); padding: 8px 8px 8px 14px; border: 1px solid var(--ink); border-radius: 4px;
+  background: var(--paper); box-shadow: 0 10px 30px rgb(0 0 0 / .3); animation: rise 180ms cubic-bezier(.16, 1, .3, 1); }
+.toast .who { font: 600 13px var(--mono); color: var(--ink); }
+.toast .msg { flex: 1 1 200px; }
+.toast button { min-height: 30px; padding: 3px 12px; }
+.toast kbd { font: 12px var(--mono); color: var(--muted); }
 
-.pill { position: fixed; z-index: 2147483647; min-height: 28px; padding: 3px 12px 3px 6px; gap: 6px; border: 0; border-radius: 999px;
-  background: var(--brand); color: #fff; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px rgb(0 0 0 / .25); }
-.pill .mark { width: 18px; height: 18px; color: #fff; }
-.pill .mark .bar { fill: var(--brand); }
-.pill:hover { filter: brightness(1.08); }
+.pill { position: fixed; z-index: 2147483647; min-height: 28px; padding: 3px 12px; gap: 8px; border: 1px solid var(--ink); border-radius: 3px;
+  background: var(--paper); color: var(--ink); font: 13px/1.4 var(--mono); box-shadow: 0 4px 14px rgb(0 0 0 / .25); }
+.pill .n { color: var(--cite); font-weight: 700; }
 
 @media (pointer: coarse) { button { min-height: 44px; } button.allow, .pill { min-height: 36px; } }
-@media (forced-colors: active) { .item, .toast, .panel { border: 1px solid CanvasText; } }
-@media (prefers-reduced-motion: reduce) { .backdrop, .panel, .toast { animation: none; } }
+@media (forced-colors: active) { .doc, .toast { border: 1px solid CanvasText; } }
+@media (prefers-reduced-motion: reduce) { .backdrop, .doc, .toast { animation: none; } }
 @keyframes fade { from { opacity: .4; } }
-@keyframes rise { from { opacity: .5; transform: translateY(8px) scale(.985); } }
+@keyframes rise { from { opacity: .5; transform: translateY(6px); } }
 `;
-
-const MARK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="6" fill="currentColor"/>' +
-  '<rect x="5" y="5.5" width="14" height="2.2" rx="1.1" fill="#fff"/><rect class="bar" x="4" y="10" width="16" height="4.2" rx="1" fill="#111"/>' +
-  '<rect x="5" y="16.4" width="9" height="2.2" rx="1.1" fill="#fff"/></svg>';
-const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 const FOCUSABLE = 'button, input, textarea, [tabindex]:not([tabindex="-1"])';
 // The host is a zero-size fixed layer. Inline !important beats page stylesheets (even their !important rules),
@@ -152,16 +168,12 @@ export function createUi(doc: Document): Ui {
   const isMac = /Mac|iPhone|iPad/.test(win.navigator.platform);
   let host: HTMLElement | null = null;
   let root: ShadowRoot | null = null;
+  let announcer: HTMLElement | null = null;
 
   const h = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Record<string, unknown> = {}, ...kids: (Node | string)[]): HTMLElementTagNameMap[K] => {
     const el: HTMLElementTagNameMap[K] = Object.assign(doc.createElement(tag), props);
     el.append(...kids);
     return el;
-  };
-  const mark = () => {
-    const span = h('span', { className: 'mark' });
-    span.innerHTML = MARK_SVG; // static markup
-    return span;
   };
 
   const shadow = (): ShadowRoot => {
@@ -181,11 +193,19 @@ export function createUi(doc: Document): Ui {
     if (!host.isConnected) (doc.body ?? doc.documentElement).append(host);
     return root!;
   };
-  let announcer: HTMLElement | null = null;
+
+  /** RFC-style header block: who is speaking and about what (left), where and when (right). */
+  /** `category` is metadata the title doesn't already say: the reference count, or the send status. */
+  const headerBlock = (category: string) => {
+    const date = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    return h('div', { className: 'hdr' },
+      h('div', {}, 'Redactor', h('br'), h('span', { className: 'k cat', textContent: category })),
+      h('div', { className: 'r' }, doc.location?.host || 'this page', h('br'), h('span', { className: 'k', textContent: date })));
+  };
 
   /** Modal dialog: focus-trapped, Esc cancels, focus returns to where it was. */
   function modal<T>(
-    opts: { title: string; tone: 'review' | 'blocked'; describe: HTMLElement },
+    opts: { title: string; category: string; tone: 'review' | 'blocked'; describe: HTMLElement },
     build: (close: (v: T) => void) => { body: Node[]; risk?: HTMLButtonElement; buttons: HTMLButtonElement[] },
     onEsc: T,
   ): Promise<T> {
@@ -207,8 +227,8 @@ export function createUi(doc: Document): Ui {
         foot.append(risk);
       }
       foot.append(h('div', { className: 'actions' }, ...buttons));
-      const panel = h('div', { className: `panel surface${opts.tone === 'blocked' ? ' danger' : ''}` },
-        h('div', { className: 'head' }, mark(), title), ...body, foot);
+      const panel = h('div', { className: `doc surface${opts.tone === 'blocked' ? ' blocked' : ''}` },
+        headerBlock(opts.category), title, ...body, foot);
       panel.setAttribute('role', 'dialog');
       panel.setAttribute('aria-modal', 'true');
       panel.setAttribute('aria-labelledby', title.id);
@@ -239,21 +259,20 @@ export function createUi(doc: Document): Ui {
     const r = anchor.getBoundingClientRect();
     const w = el.offsetWidth;
     const hgt = el.offsetHeight;
-    const vw = win.innerWidth;
-    const vh = win.innerHeight;
     // Prefer just above the editor's left edge (the send button usually sits at its right), else just below it.
     let top = r.top - hgt - 10;
     if (top < 8) top = r.bottom + 10;
-    if (top + hgt > vh - 8) return; // no room either side: keep the corner placement
+    if (top + hgt > win.innerHeight - 8) return; // no room either side: keep the corner placement
     el.style.top = `${top}px`;
-    el.style.left = `${Math.min(Math.max(8, r.left), vw - w - 8)}px`;
+    el.style.left = `${Math.min(Math.max(8, r.left), win.innerWidth - w - 8)}px`;
     el.style.right = 'auto';
     el.style.bottom = 'auto';
   }
 
   // --- Pill ----------------------------------------------------------------------
   let pillEl: HTMLButtonElement | null = null;
-  let pillText: HTMLElement | null = null;
+  let pillCountEl: HTMLElement | null = null;
+  let pillWord: HTMLElement | null = null;
   let pillAnchor: HTMLElement | null = null;
   let pillCount = 0;
   let pillAction: () => void = () => {};
@@ -274,36 +293,44 @@ export function createUi(doc: Document): Ui {
     review({ title, intro, items, sendLabel, tone = 'review' }) {
       const selected = new Set(items.map((i) => i.key));
       const alwaysAllow = new Set<string>();
-      const introEl = h('p', { className: 'intro', textContent: intro });
-      return modal<ReviewResult>({ title, tone, describe: introEl }, (close) => {
-        const list = h('ul');
+      const introEl = h('p', { className: 'lead', textContent: intro });
+      return modal<ReviewResult>({ title, tone, describe: introEl, category: `References: ${items.length}${tone === 'blocked' ? ' · held' : ''}` }, (close) => {
+        const list = h('ol', { className: 'refs' });
         items.forEach((item, n) => {
+          const row = h('li', { className: 'ref' });
+          row.dataset.state = 'redact';
           const box = h('input', { type: 'checkbox', checked: true });
-          box.addEventListener('change', () => (box.checked ? selected.add(item.key) : selected.delete(item.key)));
-          const lblId = `redactor-item-${n}-${Math.random().toString(36).slice(2, 7)}`;
-          const times = item.count > 1 ? ` · ${item.count} times` : '';
-          const row = h('li', { className: 'item' });
+          const keyId = `redactor-key-${n}-${Math.random().toString(36).slice(2, 7)}`;
+          const sync = () => {
+            row.dataset.state = alwaysAllow.has(item.key) ? 'allow' : box.checked ? 'redact' : 'skip';
+          };
+          box.addEventListener('change', () => {
+            if (box.checked) selected.add(item.key);
+            else selected.delete(item.key);
+            sync();
+          });
           const allow = h('button', { type: 'button', className: 'allow', textContent: 'Always allow' });
           allow.setAttribute('aria-pressed', 'false');
-          allow.setAttribute('aria-describedby', lblId);
-          const note = h('p', { className: 'note', textContent: "Won't be flagged again. You can remove it in Settings → Allowlist." });
+          allow.setAttribute('aria-describedby', keyId);
           allow.addEventListener('click', () => {
             const on = !alwaysAllow.has(item.key);
             if (on) alwaysAllow.add(item.key);
             else alwaysAllow.delete(item.key);
             allow.setAttribute('aria-pressed', String(on));
-            row.toggleAttribute('data-allowed', on);
-            allow.innerHTML = on ? CHECK_SVG : '';
-            allow.append(on ? 'Allowed' : 'Always allow');
+            allow.textContent = on ? 'Allowed' : 'Always allow';
             box.checked = !on;
             box.dispatchEvent(new Event('change'));
           });
+          const times = item.count > 1 ? `, ${item.count}×` : '';
           row.append(
             h('label', { className: 'pick' }, box,
-              h('span', { className: 'text' },
-                h('span', { className: 'lbl', id: lblId, textContent: item.label }),
-                h('span', { className: 'meta' }, `${item.name}${times} · `, h('code', { textContent: item.preview })))),
-            allow, note);
+              h('span', { className: 'cite' },
+                h('span', { className: 'key', id: keyId, textContent: item.placeholder ?? `[${item.label}]` }),
+                h('span', { className: 'src' }, h('b', { textContent: item.name }), h('span', { className: 'meta', textContent: times }),
+                  h('span', { className: 'meta skipped', textContent: ', sent as-is' }),
+                  h('br'), h('code', { textContent: item.preview })))),
+            h('span', { className: 'side' }, item.line ? h('span', { className: 'pos', textContent: `line ${item.line}` }) : '', allow),
+            h('p', { className: 'allowed-note', textContent: "Won't be flagged again. Remove it in Settings → Allowlist." }));
           list.append(row);
         });
         const btn = (text: string, action: ReviewResult['action'], primary = false) => {
@@ -312,8 +339,8 @@ export function createUi(doc: Document): Ui {
           return b;
         };
         return {
-          body: [introEl, h('div', { className: 'scroll' }, list),
-            h('p', { className: 'assure', textContent: 'Redactor swaps selected items for placeholders. The originals never leave this browser.' })],
+          body: [introEl, h('div', { className: 'body' }, h('p', { className: 'sec', textContent: 'References' }), list),
+            h('p', { className: 'note', textContent: 'Checked items are sent as keys; the originals stay in this browser.' })],
           risk: btn(sendLabel, 'send'),
           buttons: [btn('Cancel', 'cancel'), btn('Redact selected', 'redact', true)],
         };
@@ -322,15 +349,15 @@ export function createUi(doc: Document): Ui {
 
     failure({ title = "Redactor couldn't redact this", message, redacted, allowSend }) {
       const messageEl = h('p', { className: 'message', textContent: message });
-      return modal<'send' | 'cancel'>({ title, tone: 'blocked', describe: messageEl }, (close) => {
+      return modal<'send' | 'cancel'>({ title, tone: 'blocked', describe: messageEl, category: 'Status: nothing sent' }, (close) => {
         const status = h('p', { className: 'status' });
         status.setAttribute('role', 'status');
-        const body: Node[] = [messageEl, status];
         const cancel = h('button', { type: 'button', textContent: 'Cancel', className: redacted === undefined ? 'primary' : '' });
         cancel.addEventListener('click', () => close('cancel'));
         const buttons = [cancel];
         if (redacted !== undefined) {
           const copy = h('button', { type: 'button', className: 'primary', textContent: 'Copy redacted text' });
+          let manual: HTMLTextAreaElement | null = null;
           copy.addEventListener('click', async () => {
             if (await copyText(doc, redacted)) {
               status.textContent = 'Copied. Paste it into the message box.';
@@ -338,14 +365,13 @@ export function createUi(doc: Document): Ui {
             }
             // Clipboard blocked: show the (already redacted) text so it can be copied by hand.
             status.textContent = "Couldn't copy automatically. Select the text below and copy it.";
-            if (!body.some((n) => n instanceof HTMLTextAreaElement)) {
-              const manual = h('textarea', { className: 'manual', value: redacted, readOnly: true });
+            if (!manual) {
+              manual = h('textarea', { className: 'manual', value: redacted, readOnly: true });
               manual.setAttribute('aria-label', 'Redacted text');
               status.after(manual);
-              body.push(manual);
-              manual.focus();
-              manual.select();
             }
+            manual.focus();
+            manual.select();
           });
           buttons.push(copy);
         }
@@ -354,13 +380,14 @@ export function createUi(doc: Document): Ui {
           risk = h('button', { type: 'button', textContent: 'Send anyway' });
           risk.addEventListener('click', () => close('send'));
         }
-        return { body, risk, buttons };
+        return { body: [messageEl, status], risk, buttons };
       }, 'cancel');
     },
 
     toast(message, actions = [], anchor) {
       toastCleanup();
-      const el = h('div', { className: 'toast surface' }, mark(), h('span', { className: 'msg', textContent: message }));
+      const el = h('div', { className: 'toast surface' }, h('span', { className: 'who', textContent: 'Redactor' }),
+        h('span', { className: 'msg', textContent: message }));
       el.setAttribute('role', 'status');
       el.setAttribute('aria-live', 'polite');
       const first = actions[0];
@@ -368,7 +395,7 @@ export function createUi(doc: Document): Ui {
         const b = h('button', { type: 'button', textContent: a.label });
         if (a === first) {
           b.setAttribute('aria-keyshortcuts', 'Alt+Z');
-          b.append(' ', h('kbd', { textContent: isMac ? '⌥Z' : 'Alt+Z' }));
+          b.append(h('kbd', { textContent: isMac ? '⌥Z' : 'Alt+Z' }));
         }
         b.addEventListener('click', () => {
           toastCleanup();
@@ -428,8 +455,9 @@ export function createUi(doc: Document): Ui {
         return;
       }
       if (!pillEl) {
-        pillText = h('span');
-        pillEl = h('button', { type: 'button', className: 'pill surface' }, mark(), pillText);
+        pillCountEl = h('span', { className: 'n' });
+        pillWord = h('span');
+        pillEl = h('button', { type: 'button', className: 'pill surface' }, pillCountEl, pillWord, h('span', { textContent: '· Redact' }));
         pillEl.addEventListener('mousedown', (e) => e.preventDefault()); // keep the editor's focus and selection
         pillEl.addEventListener('click', () => pillAction());
         win.addEventListener('scroll', schedulePill, { capture: true, passive: true });
@@ -437,7 +465,8 @@ export function createUi(doc: Document): Ui {
       }
       shadow().append(pillEl);
       const noun = `${count} ${count === 1 ? 'secret' : 'secrets'}`;
-      pillText!.textContent = `${noun} detected · Redact`;
+      pillCountEl!.textContent = `[${count}]`;
+      pillWord!.textContent = count === 1 ? 'secret' : 'secrets';
       pillEl.setAttribute('aria-label', `Redact ${noun} detected in your message`);
       if (count !== pillCount && announcer) announcer.textContent = `Redactor: ${noun} detected in your message.`;
       pillCount = count;
