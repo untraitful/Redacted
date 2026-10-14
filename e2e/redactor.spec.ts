@@ -52,7 +52,8 @@ test.describe('textarea details', () => {
     await type(page, KEY);
     await page.click('#send');
     await waitForDialog(page);
-    await page.keyboard.press('Shift+Tab'); // Redact selected -> Send as-is
+    await page.keyboard.press('Shift+Tab'); // Redact selected -> Cancel
+    await page.keyboard.press('Shift+Tab'); // Cancel -> Send as-is (the separated risky action)
     await page.keyboard.press('Enter');
     await expect.poll(() => sent(page)).toEqual([KEY]);
   });
@@ -87,6 +88,24 @@ test.describe('textarea details', () => {
     await editor(page).focus();
     await page.keyboard.press('Enter');
     await expect.poll(() => sent(page)).toEqual([KEY]);
+  });
+
+  test('Alt+Z undoes from anywhere while the toast is up', async ({ page }) => {
+    await open(page, 'textarea');
+    await paste(page, KEY);
+    await expect.poll(() => editorText(page)).toBe('[GITHUB_TOKEN_1]');
+    await page.keyboard.press('Alt+Z');
+    await expect.poll(() => editorText(page)).toBe(KEY);
+  });
+
+  test('a page rule cannot hide the review dialog', async ({ page }) => {
+    await open(page, 'textarea');
+    await page.addStyleTag({ content: 'redactor-ui { display: none !important; visibility: hidden !important; }' });
+    await type(page, KEY);
+    await page.keyboard.press('Enter');
+    await waitForDialog(page);
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('redactor-ui')!).display)).toBe('block');
+    expect(await uiText(page)).toContain('Review before sending');
   });
 
   test('restore mode shows originals in the transcript without exposing them to textContent', async ({ page, context }) => {

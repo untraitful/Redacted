@@ -42,6 +42,8 @@ export interface ControllerDeps {
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+/** "look" / "looks" to agree with a count. */
+const agree = (n: number, verb: string) => (n === 1 ? `${verb}s` : verb);
 
 function stop(e: Event): void {
   e.preventDefault();
@@ -127,7 +129,7 @@ export function createController(deps: ControllerDeps) {
     vault.allow(pairs.map(([, v]) => v));
     let text = readEditor(el);
     for (const [p, v] of pairs) text = text.split(p).join(v);
-    if (!(await replaceAll(el, text, adapter().write))) ui.toast('Undo failed: the editor rejected the change.');
+    if (!(await replaceAll(el, text, adapter().write))) ui.toast("Undo didn't apply: the editor rejected the change.", [], el);
   }
 
   /** Fail closed: nothing was sent; offer copy, and optionally an explicit override. */
@@ -205,7 +207,8 @@ export function createController(deps: ControllerDeps) {
     const items = reviewItems(findings);
     const r = await ui.review({
       title: s.sendMode === 'block' ? 'Send blocked: secrets detected' : 'Review before sending',
-      intro: `Found ${plural(items.length, 'item')} that look like secrets or personal data. Selected items are replaced with placeholders; the originals stay in this browser.`,
+      tone: s.sendMode === 'block' ? 'blocked' : 'review',
+      intro: `Found ${plural(items.length, 'item')} that ${agree(items.length, 'look')} like secrets or personal data.`,
       items,
       sendLabel: 'Send as-is',
     });
@@ -225,12 +228,12 @@ export function createController(deps: ControllerDeps) {
   function afterSendRedaction(el: HTMLElement, pairs: Array<[string, string]>, s: Settings): void {
     if (s.autoResend) {
       void resend(el);
-      ui.toast(`Redacted ${plural(pairs.length, 'item')} and sent.`);
+      ui.toast(`Redacted ${plural(pairs.length, 'item')} and sent.`, [], el);
       return;
     }
     ui.toast(`Redacted ${plural(pairs.length, 'item')}. Review, then press Enter to send.`, [
       { label: 'Undo', run: () => void undo(el, pairs) },
-    ]);
+    ], el);
   }
 
   function onKeydown(e: KeyboardEvent): void {
@@ -289,7 +292,7 @@ export function createController(deps: ControllerDeps) {
       const items = reviewItems(findings);
       const r = await ui.review({
         title: 'Review paste',
-        intro: `This paste contains ${plural(items.length, 'item')} that look like secrets or personal data.`,
+        intro: `This paste contains ${plural(items.length, 'item')} that ${agree(items.length, 'look')} like secrets or personal data.`,
         items,
         sendLabel: 'Paste as-is',
       });
@@ -309,7 +312,7 @@ export function createController(deps: ControllerDeps) {
     if (!(await insert(el, r.text, at, values)) || !chosen.length) return;
     deps.onRedacted?.(r.findings.length);
     const pairs = [...new Map(r.placeholders.map((p, i) => [p, r.findings[i]!.value])).entries()];
-    ui.toast(`Redacted ${plural(pairs.length, 'item')} from paste.`, [{ label: 'Undo', run: () => void undo(el, pairs) }]);
+    ui.toast(`Redacted ${plural(pairs.length, 'item')} from paste.`, [{ label: 'Undo', run: () => void undo(el, pairs) }], el);
   }
 
   // --- File uploads -----------------------------------------------------------------
@@ -412,7 +415,7 @@ export function createController(deps: ControllerDeps) {
         if (!now.length) return ui.pill(el, 0, () => {});
         void redactEditor(el, text, now, false).then((pairs) => {
           ui.pill(el, 0, () => {});
-          if (pairs) ui.toast(`Redacted ${plural(pairs.length, 'item')}.`, [{ label: 'Undo', run: () => void undo(el, pairs) }]);
+          if (pairs) ui.toast(`Redacted ${plural(pairs.length, 'item')}.`, [{ label: 'Undo', run: () => void undo(el, pairs) }], el);
         });
       });
     }, deps.debounceMs ?? 300);
