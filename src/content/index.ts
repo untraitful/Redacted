@@ -14,8 +14,10 @@ function apply(raw: unknown): void {
   settings = mergeSettings(raw);
   engine = createEngine(settings);
   vault.setStyle(settings.placeholderStyle);
+  controller.settingsChanged();
 }
 
+// apply() only runs from async storage callbacks, after this is assigned.
 const controller = createController({
   win: window,
   doc: document,

@@ -15,6 +15,8 @@ import {
   saveSelection,
   type SavedSelection,
 } from './editor';
+import { redactedFile, scanFiles, type FileScan } from './files';
+import { createRestorer } from './restore';
 import type { ReviewItem, Ui } from './ui';
 import type { VaultClient } from './vault-client';
 
@@ -32,6 +34,8 @@ export interface ControllerDeps {
   warn(message: string): void;
   /** Live-scan debounce; tests pass 0. */
   debounceMs?: number;
+  /** Restore mode waits this long after a message's last change (streaming) before touching it. */
+  restoreQuietMs?: number;
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -59,6 +63,14 @@ export function createController(deps: ControllerDeps) {
   let busy = false;
   let lastEditor: HTMLElement | null = null;
   let warned = false;
+  /** Uploads (warn mode) that contained findings: the next send is blocked until the user confirms. */
+  let armed: Array<{ name: string; count: number }> = [];
+  /** File scans still running; a send waits for them rather than racing past. */
+  const pending = new Set<Promise<void>>();
+  const track = (p: Promise<void>) => {
+    const done = p.catch(() => {}).finally(() => pending.delete(done));
+    pending.add(done);
+  };
 
   const active = () => {
     const s = deps.settings();
@@ -149,12 +161,35 @@ export function createController(deps: ControllerDeps) {
     const s = deps.settings();
     if (s.sendMode === 'off') return;
     if (busy) return stop(e);
+    if (pending.size || armed.length) {
+      stop(e);
+      busy = true;
+      void uploadGate(el, s).finally(() => (busy = false));
+      return;
+    }
     const text = readEditor(el);
     const findings = scan(text);
     if (!findings.length) return;
     stop(e);
     busy = true;
     void handleSend(el, text, findings, s).finally(() => (busy = false));
+  }
+
+  async function uploadGate(el: HTMLElement, s: Settings): Promise<void> {
+    while (pending.size) await Promise.all(pending);
+    if (armed.length) {
+      const list = armed.map((a) => `${a.name} (${plural(a.count, 'finding')})`).join(', ');
+      const choice = await ui.failure({
+        title: 'Upload contains secrets',
+        message: `You attached ${list}. Remove the file before sending, or send anyway.`,
+        allowSend: true,
+      });
+      if (choice === 'cancel') return el.focus();
+      armed = [];
+    }
+    const text = readEditor(el);
+    const findings = scan(text);
+    return findings.length ? handleSend(el, text, findings, s) : resend(el);
   }
 
   async function handleSend(el: HTMLElement, text: string, findings: Finding[], s: Settings): Promise<void> {
@@ -216,11 +251,11 @@ export function createController(deps: ControllerDeps) {
   function onIncoming(e: ClipboardEvent | DragEvent, data: DataTransfer | null): void {
     if (isOurs(e) || !active() || !data) return;
     const s = deps.settings();
+    // Files: handled by the upload logic. Any text that came along is caught by the send scan.
+    if (data.files.length) return onFiles(e, [...data.files], s);
     if (s.pasteMode === 'off') return;
     const el = editableRoot(e.target);
     if (!el) return;
-    // Files pass through untouched; if text came with them, the send scan is the backstop.
-    if (data.files.length) return;
     const plain = data.getData('text/plain');
     const findings = scan(plain);
     // Hidden secrets in rich text (attributes, hidden spans): force the clean plain-text path.
@@ -272,6 +307,89 @@ export function createController(deps: ControllerDeps) {
     ui.toast(`Redacted ${plural(pairs.length, 'item')} from paste.`, [{ label: 'Undo', run: () => void undo(el, pairs) }]);
   }
 
+  // --- File uploads -----------------------------------------------------------------
+
+  const fileScan = (files: File[]) => scanFiles(files, scan);
+  const hits = (scans: FileScan[]) => scans.filter((f) => f.findings.length);
+
+  function reportTooLarge(files: File[]): void {
+    if (files.length) ui.toast(`${files.map((f) => f.name).join(', ')}: over 2 MB, not scanned for secrets.`);
+  }
+
+  function onChange(e: Event): void {
+    const input = e.target;
+    if (isOurs(e) || !(input instanceof HTMLInputElement) || input.type !== 'file' || !active()) return;
+    const files = [...(input.files ?? [])];
+    onFiles(e, files, deps.settings(), input);
+  }
+
+  function onFiles(e: Event, files: File[], s: Settings, input?: HTMLInputElement): void {
+    if (s.fileMode === 'off' || !files.length) return;
+    if (s.fileMode === 'warn') return track(armFrom(files));
+    stop(e); // redact: the page must not see the originals; we re-dispatch with redacted copies
+    track(redactUpload(e, files, input).catch(async () => {
+      if (input) input.value = '';
+      await ui.failure({ message: "Redactor couldn't make a redacted copy of this upload, so it was cancelled.", allowSend: false });
+    }));
+  }
+
+  async function armFrom(files: File[]): Promise<void> {
+    const { scans, tooLarge } = await fileScan(files);
+    reportTooLarge(tooLarge);
+    const found = hits(scans);
+    if (!found.length) return;
+    armed.push(...found.map((f) => ({ name: f.file.name, count: f.findings.length })));
+    ui.toast(`${found.map((f) => `${f.file.name}: ${plural(f.findings.length, 'secret')}`).join(', ')}. Remove it before sending, or you'll be asked to confirm.`);
+  }
+
+  async function redactUpload(e: Event, files: File[], input?: HTMLInputElement): Promise<void> {
+    const { scans, tooLarge } = await fileScan(files);
+    reportTooLarge(tooLarge);
+    const byFile = new Map(hits(scans).map((f) => [f.file, f]));
+    const dt = new DataTransfer();
+    let count = 0;
+    for (const file of files) {
+      const hit = byFile.get(file);
+      if (!hit) {
+        dt.items.add(file);
+        continue;
+      }
+      const r = deps.engine().redact(hit.text, vault.vault, { allowed: vault.allowed }, hit.findings);
+      count += r.findings.length;
+      dt.items.add(redactedFile(file, r.text));
+    }
+    vault.persist();
+    if (input) {
+      input.files = dt.files;
+      input.dispatchEvent(mark(new Event('input', { bubbles: true })));
+      input.dispatchEvent(mark(new Event('change', { bubbles: true })));
+    } else {
+      const init = { bubbles: true, cancelable: true };
+      const ev = e instanceof ClipboardEvent
+        ? new ClipboardEvent('paste', { ...init, clipboardData: dt })
+        : new DragEvent(e.type, { ...init, clientX: (e as DragEvent).clientX, clientY: (e as DragEvent).clientY, dataTransfer: dt });
+      const carried = ev instanceof ClipboardEvent ? ev.clipboardData : (ev as DragEvent).dataTransfer;
+      // Some engines drop a constructed DataTransfer; then the page would get nothing, so treat it as a failure.
+      if (carried?.files.length !== dt.files.length) throw new Error('DataTransfer not carried');
+      (e.target as EventTarget).dispatchEvent(mark(ev));
+    }
+    if (count) ui.toast(`Uploaded a redacted copy (${plural(count, 'item')} replaced).`);
+  }
+
+  // --- Restore mode ---------------------------------------------------------------
+
+  const restorer = createRestorer({
+    doc,
+    selectors: adapter.messages,
+    vault: () => vault.vault,
+    quietMs: deps.restoreQuietMs,
+    onFirstRestore: () => ui.toast('Restore mode (experimental) is on: originals are shown in this page\'s DOM tree, inside closed shadow roots.'),
+  });
+  function syncRestore(): void {
+    if (deps.settings().restoreMode && active()) restorer.start();
+    else restorer.stop();
+  }
+
   // --- Live scan ------------------------------------------------------------------
 
   let liveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -314,7 +432,7 @@ export function createController(deps: ControllerDeps) {
     ['keydown', onKeydown], ['click', onClick], ['submit', onSubmit],
     ['paste', (e: ClipboardEvent) => onIncoming(e, e.clipboardData)],
     ['drop', (e: DragEvent) => onIncoming(e, e.dataTransfer)],
-    ['input', onInput], ['focusin', onFocusIn],
+    ['input', onInput], ['focusin', onFocusIn], ['change', onChange],
   ];
   let observer: MutationObserver | undefined;
 
@@ -329,11 +447,15 @@ export function createController(deps: ControllerDeps) {
         }, 1000);
       });
       observer.observe(doc.documentElement, { childList: true, subtree: true });
+      syncRestore();
     },
     uninstall(): void {
       for (const [type, fn] of listeners) win.removeEventListener(type, fn as EventListener, true);
       observer?.disconnect();
+      restorer.stop();
     },
+    /** Call after settings change. */
+    settingsChanged: syncRestore,
     /** For the "Redact current input" command (Phase 4). */
     async redactCurrent(): Promise<void> {
       const el = currentEditor();

@@ -1,12 +1,12 @@
-import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { createEngine, hashedAllowEntry } from '../../src/engine/engine';
 import { sha256Hex } from '../../src/engine/sha256';
 import { fake, settings } from './helpers';
 
 describe('sha256', () => {
-  it.each(['', 'abc', 'x'.repeat(55), 'x'.repeat(64), 'ünïcødé 🔑', fake(1000)])('matches node:crypto (%#)', (s) => {
-    expect(sha256Hex(s)).toBe(createHash('sha256').update(s).digest('hex'));
+  it.each(['', 'abc', 'x'.repeat(55), 'x'.repeat(64), 'ünïcødé 🔑', fake(1000)])('matches WebCrypto (%#)', async (s) => {
+    const ref = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+    expect(sha256Hex(s)).toBe([...ref].map((b) => b.toString(16).padStart(2, '0')).join(''));
   });
 
   it('hashed allowlist entries suppress the exact value', () => {

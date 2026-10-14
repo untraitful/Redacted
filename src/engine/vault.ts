@@ -46,6 +46,11 @@ export class Vault {
     return this.byValue.get(value);
   }
 
+  /** Original for a placeholder, if this vault issued it. */
+  lookup(placeholder: string): string | undefined {
+    return this.byPlaceholder.get(placeholder)?.value;
+  }
+
   entries(): VaultEntry[] {
     return [...this.byValue.values()];
   }

@@ -57,6 +57,11 @@ in AI chat inputs before the text reaches the site. It is a seatbelt for acciden
   because handlers can't await.
 - Editor writes are verified by reading back; tests drive the controller with fake editors in happy-dom
   (`test/content/`), and real editors are covered by Playwright in Phase 5.
+- Uploads: `warn` (default) lets the upload through and blocks the next send until confirmed. A send
+  during a pending file scan waits for it. `redact` (experimental) stops the event and re-dispatches
+  redacted copies; if the engine can't carry a constructed DataTransfer, it fails closed.
+- Restore mode (experimental, off): `<redactor-restore>` keeps the placeholder in light DOM and renders the
+  original in a closed shadow root, only after a message is quiet for 800 ms.
 - Write strategies: for textarea/input, use the native prototype `value` setter or `setRangeText`, then
   dispatch a bubbling `input` event. For contenteditable, select all and dispatch a synthetic `paste` with
   a `DataTransfer`, falling back to `execCommand('insertText')`. Our own synthetic events are marked so we

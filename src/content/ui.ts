@@ -21,7 +21,8 @@ export interface ToastAction {
 
 export interface Ui {
   review(opts: { title: string; intro: string; items: ReviewItem[]; sendLabel: string }): Promise<ReviewResult>;
-  failure(opts: { message: string; redacted: string; allowSend: boolean }): Promise<'send' | 'cancel'>;
+  /** Blocking notice. `redacted` adds a "Copy redacted text" button; `allowSend` adds an explicit "Send anyway". */
+  failure(opts: { title?: string; message: string; redacted?: string; allowSend: boolean }): Promise<'send' | 'cancel'>;
   toast(message: string, actions?: ToastAction[]): void;
   pill(anchor: HTMLElement | null, count: number, onRedact: () => void): void;
 }
@@ -154,17 +155,20 @@ export function createUi(doc: Document): Ui {
       }, { action: 'cancel', selected, alwaysAllow });
     },
 
-    failure({ message, redacted, allowSend }) {
-      return modal<'send' | 'cancel'>('Redactor blocked this', (close) => {
+    failure({ title = 'Redactor blocked this', message, redacted, allowSend }) {
+      return modal<'send' | 'cancel'>(title, (close) => {
         const status = h('p');
         status.setAttribute('role', 'status');
-        const copy = h('button', { type: 'button', className: 'primary', textContent: 'Copy redacted text' });
-        copy.addEventListener('click', async () => {
-          status.textContent = (await copyText(doc, redacted)) ? 'Redacted text copied. Paste it into the input.' : 'Copy failed.';
-        });
-        const cancel = h('button', { type: 'button', textContent: 'Cancel' });
+        const cancel = h('button', { type: 'button', textContent: 'Cancel', className: redacted === undefined ? 'primary' : '' });
         cancel.addEventListener('click', () => close('cancel'));
-        const buttons = [cancel, copy];
+        const buttons = [cancel];
+        if (redacted !== undefined) {
+          const copy = h('button', { type: 'button', className: 'primary', textContent: 'Copy redacted text' });
+          copy.addEventListener('click', async () => {
+            status.textContent = (await copyText(doc, redacted)) ? 'Redacted text copied. Paste it into the input.' : 'Copy failed.';
+          });
+          buttons.push(copy);
+        }
         if (allowSend) {
           const send = h('button', { type: 'button', textContent: 'Send anyway' });
           send.addEventListener('click', () => close('send'));
