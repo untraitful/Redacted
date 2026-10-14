@@ -1,5 +1,6 @@
 import { DETECTORS } from './detectors';
 import type { Confidence, CustomPattern, Detector, EngineSettings, Finding } from './types';
+import { sha256Hex } from './sha256';
 import { PLACEHOLDER_RE, Vault } from './vault';
 
 const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
@@ -74,13 +75,21 @@ export function compileCustomPattern(p: CustomPattern): CompileResult {
 
 type AllowTest = (value: string) => boolean;
 
+/** Allowlist entry for "Always allow": a hash, so the original never lands in storage.local. */
+export const hashedAllowEntry = (value: string) => `sha256:${sha256Hex(value)}`;
+
 export function compileAllowlist(entries: string[]): { test: AllowTest; errors: string[] } {
   const exact = new Set<string>();
+  const hashed = new Set<string>();
   const res: RegExp[] = [];
   const errors: string[] = [];
   for (const raw of entries) {
     const entry = raw.trim();
     if (!entry) continue;
+    if (/^sha256:[0-9a-f]{64}$/.test(entry)) {
+      hashed.add(entry.slice(7));
+      continue;
+    }
     const m = /^\/(.+)\/([imsu]*)$/s.exec(entry);
     if (!m) {
       exact.add(entry);
@@ -92,7 +101,10 @@ export function compileAllowlist(entries: string[]): { test: AllowTest; errors: 
       errors.push(`${entry}: ${(e as Error).message}`);
     }
   }
-  return { test: (v) => exact.has(v) || res.some((r) => r.test(v)), errors };
+  return {
+    test: (v) => exact.has(v) || res.some((r) => r.test(v)) || (hashed.size > 0 && hashed.has(sha256Hex(v))),
+    errors,
+  };
 }
 
 export function activeDetectors(settings: EngineSettings): Detector[] {
