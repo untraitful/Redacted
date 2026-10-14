@@ -1,18 +1,23 @@
 import { createEngine } from '../engine/engine';
-import { DEFAULT_SETTINGS, SETTINGS_KEY, mergeSettings, type Settings } from '../shared/settings';
-import { adapterFor, withFallback } from '../sites';
+import type { Request, TabMessage } from '../shared/messages';
+import { DEFAULT_SETTINGS, SETTINGS_KEY, sanitizeSettings, type Settings } from '../shared/settings';
+import { adapterFor, withFallback, type SiteAdapter } from '../sites';
 import { createController } from './controller';
 import { createUi } from './ui';
 import { VaultClient } from './vault-client';
 
 // Runs at document_start so our capture listeners are registered before the page's own.
+const host = location.host;
+const send = (req: Request) => chrome.runtime.sendMessage(req);
 let settings: Settings = DEFAULT_SETTINGS;
 let engine = createEngine(settings);
-const vault = new VaultClient((req) => chrome.runtime.sendMessage(req), settings.placeholderStyle);
+let adapter: SiteAdapter = withFallback(adapterFor(host));
+const vault = new VaultClient(send, settings.placeholderStyle);
 
 function apply(raw: unknown): void {
-  settings = mergeSettings(raw);
+  settings = sanitizeSettings(raw);
   engine = createEngine(settings);
+  adapter = withFallback(adapterFor(host, settings.customSites));
   vault.setStyle(settings.placeholderStyle);
   controller.settingsChanged();
 }
@@ -21,8 +26,8 @@ function apply(raw: unknown): void {
 const controller = createController({
   win: window,
   doc: document,
-  host: location.host,
-  adapter: withFallback(adapterFor(location.host)),
+  host,
+  adapter: () => adapter,
   settings: () => settings,
   engine: () => engine,
   vault,
@@ -32,6 +37,7 @@ const controller = createController({
     apply({ ...settings, allowlist });
     void chrome.storage.local.set({ [SETTINGS_KEY]: settings });
   },
+  onRedacted: (n) => void send({ type: 'stats:add', n }).catch(() => {}),
   warn: (m) => console.warn(`[Redactor] ${m}`),
 });
 controller.install();
@@ -39,5 +45,10 @@ controller.install();
 void chrome.storage.local.get(SETTINGS_KEY).then((r) => apply(r[SETTINGS_KEY]));
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[SETTINGS_KEY]) apply(changes[SETTINGS_KEY].newValue);
+});
+chrome.runtime.onMessage.addListener((msg: TabMessage, sender) => {
+  if (sender.id !== chrome.runtime.id) return;
+  if (msg.type === 'redact-current') void controller.redactCurrent();
+  if (msg.type === 'vault:cleared') vault.clear();
 });
 void vault.load();

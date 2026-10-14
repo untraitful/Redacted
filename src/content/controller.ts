@@ -24,7 +24,10 @@ export interface ControllerDeps {
   win: Window;
   doc: Document;
   host: string;
-  adapter: SiteAdapter;
+  /** Resolved lazily: custom-site selectors arrive with settings, after install(). */
+  adapter(): SiteAdapter;
+  /** Number of values just replaced (badge). */
+  onRedacted?(n: number): void;
   settings(): Settings;
   engine(): Engine;
   vault: VaultClient;
@@ -91,12 +94,12 @@ export function createController(deps: ControllerDeps) {
 
   function currentEditor(): HTMLElement | null {
     if (lastEditor?.isConnected) return lastEditor;
-    const el = query(adapter.input);
+    const el = query(adapter().input);
     return el ? editableRoot(el) : null;
   }
 
   function findSend(): HTMLButtonElement | null {
-    const b = query(adapter.send);
+    const b = query(adapter().send);
     return b instanceof HTMLButtonElement || b?.getAttribute('role') === 'button' ? (b as HTMLButtonElement) : null;
   }
 
@@ -124,7 +127,7 @@ export function createController(deps: ControllerDeps) {
     vault.allow(pairs.map(([, v]) => v));
     let text = readEditor(el);
     for (const [p, v] of pairs) text = text.split(p).join(v);
-    if (!(await replaceAll(el, text, adapter.write))) ui.toast('Undo failed: the editor rejected the change.');
+    if (!(await replaceAll(el, text, adapter().write))) ui.toast('Undo failed: the editor rejected the change.');
   }
 
   /** Fail closed: nothing was sent; offer copy, and optionally an explicit override. */
@@ -146,11 +149,12 @@ export function createController(deps: ControllerDeps) {
     const r = deps.engine().redact(text, vault.vault, { allowed: vault.allowed }, findings);
     vault.persist();
     const values = [...new Set(findings.map((f) => f.value))];
-    const ok = (await replaceAll(el, r.text, adapter.write)) && !values.some((v) => readEditor(el).includes(v));
+    const ok = (await replaceAll(el, r.text, adapter().write)) && !values.some((v) => readEditor(el).includes(v));
     if (!ok) {
       await failClosed(el, r.text, values, canSend);
       return null;
     }
+    deps.onRedacted?.(r.findings.length);
     return [...new Map(r.placeholders.map((p, i) => [p, r.findings[i]!.value])).entries()];
   }
 
@@ -236,13 +240,13 @@ export function createController(deps: ControllerDeps) {
 
   function onClick(e: MouseEvent): void {
     if (isOurs(e) || !(e.target instanceof Element)) return;
-    if (!e.target.closest(adapter.send.join(','))) return;
+    if (!e.target.closest(adapter().send.join(','))) return;
     interceptSend(e, currentEditor());
   }
 
   function onSubmit(e: SubmitEvent): void {
     const form = e.target instanceof HTMLFormElement ? e.target : null;
-    const inForm = form && query(adapter.input, form);
+    const inForm = form && query(adapter().input, form);
     interceptSend(e, inForm ? editableRoot(inForm) : currentEditor());
   }
 
@@ -270,7 +274,7 @@ export function createController(deps: ControllerDeps) {
   }
 
   async function insert(el: HTMLElement, text: string, at: SavedSelection, values: string[]): Promise<boolean> {
-    const ok = (await insertAt(el, text, at, adapter.write)) && !values.some((v) => readEditor(el).includes(v));
+    const ok = (await insertAt(el, text, at, adapter().write)) && !values.some((v) => readEditor(el).includes(v));
     if (!ok) await failClosed(el, text, values, false);
     return ok;
   }
@@ -303,6 +307,7 @@ export function createController(deps: ControllerDeps) {
     vault.persist();
     const values = [...new Set(chosen.map((f) => f.value))];
     if (!(await insert(el, r.text, at, values)) || !chosen.length) return;
+    deps.onRedacted?.(r.findings.length);
     const pairs = [...new Map(r.placeholders.map((p, i) => [p, r.findings[i]!.value])).entries()];
     ui.toast(`Redacted ${plural(pairs.length, 'item')} from paste.`, [{ label: 'Undo', run: () => void undo(el, pairs) }]);
   }
@@ -373,6 +378,7 @@ export function createController(deps: ControllerDeps) {
       if (carried?.files.length !== dt.files.length) throw new Error('DataTransfer not carried');
       (e.target as EventTarget).dispatchEvent(mark(ev));
     }
+    if (count) deps.onRedacted?.(count);
     if (count) ui.toast(`Uploaded a redacted copy (${plural(count, 'item')} replaced).`);
   }
 
@@ -380,7 +386,7 @@ export function createController(deps: ControllerDeps) {
 
   const restorer = createRestorer({
     doc,
-    selectors: adapter.messages,
+    selectors: adapter().messages,
     vault: () => vault.vault,
     quietMs: deps.restoreQuietMs,
     onFirstRestore: () => ui.toast('Restore mode (experimental) is on: originals are shown in this page\'s DOM tree, inside closed shadow roots.'),
@@ -419,12 +425,12 @@ export function createController(deps: ControllerDeps) {
 
   /** SPA re-renders: warn once (no values) when the site adapter's selectors stop matching. */
   function checkAdapter(): void {
-    if (warned || adapter.id === GENERIC.id || !doc.body) return;
-    const specific = adapter.input.filter((s) => !GENERIC.input.includes(s));
+    if (warned || adapter().id === GENERIC.id || !doc.body) return;
+    const specific = adapter().input.filter((s) => !GENERIC.input.includes(s));
     if (query(specific)) return;
     if (query(GENERIC.input)) {
       warned = true;
-      deps.warn(`${adapter.name} adapter selectors not found; using the generic fallback.`);
+      deps.warn(`${adapter().name} adapter selectors not found; using the generic fallback.`);
     }
   }
 

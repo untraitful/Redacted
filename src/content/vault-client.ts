@@ -37,6 +37,12 @@ export class VaultClient {
     void this.send({ type: 'vault:allow', values: list }).catch(() => {});
   }
 
+  /** The popup cleared this tab's vault. */
+  clear(): void {
+    this.vault = new Vault(this.vault.style);
+    this.allowed.clear();
+  }
+
   setStyle(style: PlaceholderStyle): void {
     this.vault.style = style;
   }

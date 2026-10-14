@@ -98,8 +98,15 @@ const SITES: SiteAdapter[] = [
 
 export const BUILTIN_SITES = SITES;
 
-export function adapterFor(host: string): SiteAdapter {
-  return SITES.find((s) => s.hosts.includes(host)) ?? GENERIC;
+export function adapterFor(host: string, custom: Array<{ host: string; input?: string; send?: string }> = []): SiteAdapter {
+  const builtin = SITES.find((s) => s.hosts.includes(host));
+  if (builtin) return builtin;
+  const c = custom.find((s) => s.host === host);
+  if (!c) return GENERIC;
+  return {
+    ...GENERIC, id: `custom:${host}`, name: host, hosts: [host], verified: false,
+    input: c.input ? [c.input] : [], send: c.send ? [c.send] : [],
+  };
 }
 
 /** Adapter selectors first, generic ones after, so a stale adapter still finds something. */

@@ -101,7 +101,7 @@ export function setup(opts: { editor: 'textarea' | 'react' | 'prosemirror' | 're
   const vault = new VaultClient(async () => true, 'bracket');
   const engine = createEngine(settings);
   const ctrl = createController({
-    win: window, doc: document, host: 'test.local', adapter, settings: () => settings, engine: () => engine, vault, ui,
+    win: window, doc: document, host: 'test.local', adapter: () => adapter, settings: () => settings, engine: () => engine, vault, ui,
     addToAllowlist: (e) => calls.allowlist.push(...e), warn: (m) => calls.warns.push(m), debounceMs: 0, restoreQuietMs: opts.quietMs,
   });
   ctrl.install();
